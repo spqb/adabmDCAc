@@ -47,6 +47,9 @@ Add the flag `--restore` to restart the training from the checkpoint saved in th
   - A lot of things
   - _Parameters file_. Missing couplings are assumed to be inactive when the training re-starts.
 
-  
+## MC options 
 
-
+## To be done
+  - Give alphabet in input
+  - Save and converge according to the Pearson correlation coefficient?
+  - Complete the documentation
