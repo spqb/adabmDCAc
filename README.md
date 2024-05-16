@@ -1,4 +1,4 @@
-# adabmDCAc-
+# adabmDCAc
 
 This is a C/C++ implementation of the Boltzmann machine learning for biological sequences.
 
