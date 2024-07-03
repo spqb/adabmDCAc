@@ -56,7 +56,7 @@ int main(int argc, char **argv)
   params.print_learning_strategy();
   Model model(data.q, data.L, &params, &mstat, data.msa, data.tm.size(), &data.tm_index);
   model.initialize_parameters(data.fm, data.cov);
-  if(!params.restore_flag)
+  if(!params.restore_flag && !params.file_params)
     model.initial_decimation(data.cov);
   Data_e data_e(&params, data.q, data.L, data.Meff);
   char ene_fit[1000];
@@ -212,11 +212,9 @@ int main(int argc, char **argv)
       else
         eqmc = model.sample(data.msa);
       model.compute_errors(data.fm, data.sm, data.cov, errs);
-      cout << "N: " << params.Nmc_config * params.Nmc_starts * params.num_threads << " Teq: " << params.Teq << " Twait: " << params.Twait;
-      cout.setf(ios::scientific);
-      cout << " merr_fm: " << errs.merrh << " merr_sm: " << errs.merrJ << " averr_fm: " << errs.averrh << " averr_sm: " << errs.averrJ << " cov_err: " << errs.errnorm;
-      cout.unsetf(ios::scientific);
-      cout << " corr: " << model.pearson(data.cov, false) << endl;
+      fprintf(stdout, "it: %d el_time: %d Teq: %d Twait: %d  ", iter, int(time(NULL)-in_time), params.Teq, params.Twait);
+      fprintf(stdout, "lrav: %.2e sp: %.2e ", lrav, model.model_sp);
+      fprintf(stdout, "cov_err: %.2e pears_act: %.2e pears_all: %.2e\n", errs.errnorm, model.pearson(data.cov, false), model.pearson(data.cov, true));
       fflush(stdout);
     }
   }
