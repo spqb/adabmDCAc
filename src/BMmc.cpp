@@ -925,13 +925,14 @@ bool Model::sample_ising(vector<vector<unsigned char>> &msa)
     if (test1)
     {
       if (params->Twait > 1)
-        params->Twait -= 1;
+        // params->Twait-=1;
+          params->Twait = floor((params->Twait + params->Twait_last) * 0.5);
       params->Teq = 2 * params->Twait;
     }
     else if (!test2)
     {
       eqmc = false;
-      params->Twait += 1;
+      params->Twait *= 2;
       params->Teq = 2 * params->Twait;
     }
   }

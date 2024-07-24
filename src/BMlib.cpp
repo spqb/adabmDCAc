@@ -122,6 +122,8 @@ int Params::read_params(int &argc, char **argv)
 			break;
 		case 'i':
 			maxiter = atoi(optarg);
+			if(maxiter == 0)
+				nprinteq = 1;
 			break;
 		case 'k':
 			label = optarg;
@@ -186,12 +188,12 @@ int Params::read_params(int &argc, char **argv)
 		case 'A':
 			rmgauge = true;
 			break;
-		case 'B':
+		case 'D':
 			phmm = true;
 			break;
-		case 'D':
-			dgap = true;
-			break;
+		//case 'D':
+		//	dgap = true;
+		//	break;
 		case 'F':
 			overwrite = false;
 			break;
@@ -268,11 +270,12 @@ int Params::read_params(int &argc, char **argv)
 			cout << "-f : (file) MSA alignment in FASTA format" << endl;
 			cout << "-q : (optional file) Read frequencies from file - alternative to MSA" << endl;
 			cout << "-w : (optional file) weights file" << endl;
-			cout << "-b : (letter) Alphabet, default: a. " << endl
+			cout << "-b : (char) Pre-defined alphabet, default: a. " << endl
 				 << "\ta : amino-acids. " << endl
 				 << "\tn : nucleic acids. " << endl
 				 << "\ti : Ising " << endl
 				 << "\te : epigenetic data. " << endl;
+			cout << "-b : (string) User-defined alphabet." << endl; 
 			cout << "-l : (number) Threshold used within the reweighting process, default: " << w_th << endl;
 			cout << endl;
 
@@ -318,23 +321,13 @@ int Params::read_params(int &argc, char **argv)
 			cout << "-p : (optional file) Initial parameters J, h" << endl;
 			cout << "-C : (optional file) (i j a b) or (i j a b corr) input interaction graph" << endl;
 			cout << "-Z : (flag) Set all zero couplings to inactive" << endl;
-			cout << "-x : (number) Required sparsity (if not required, dense Potts is used). Default: sDKL-based" << endl
+			cout << "-x : (number) Required sparsity (if not required, dense Potts is used) using pruning/activation of the couplings." << endl;
+			cout << "     For the pruning procedure, a sDKL-based method is assumed" << endl
 				 << "\tadd -U (flag) to use frequency-based instead" << endl
 				 << "\tadd -V (flag) to use coupling-based instead" << endl;
-			cout << "-X : (number) Decimate every x steps even if not converged, default: infinite" << endl;
+			cout << "-X : (number) Decimate/activate every x steps even if not converged, default: infinite" << endl;
 			cout << endl;
 
-			cout << "Options for Monte Carlo sampling:" << endl;
-			cout << "-e : (number) Initial MC equilibration time (in MCsweeps), default: " << Teq << endl;
-			cout << "-t : (number) Initial sampling time of MC algorithm (in MCsweeps), default: " << Twait << endl;
-			cout << "-s : (number) Number of the MC chains per thread, default: " << Nmc_starts << endl;
-			cout << "-n : (number) Number of MC sampled configurations per chain, default: " << Nmc_config << endl;
-			cout << "-G : (flag) Using Gibbs sampling" << endl;
-			cout << "-M : (flag) Using Metropolis-Hastings sampling" << endl;
-			cout << "-P : (flag) Use persistent MC chains" << endl;
-			cout << "-Q : (flag) Initialize MC chains in data points" << endl;
-			cout << "-L : (flag) Do not adapt Teq and Twait to achieve equilibration" << endl;
-			cout << endl;
 			cout << "Options for Monte Carlo sampling:" << endl;
 			cout << "-e : (number) Initial MC equilibration time (in MCsweeps), default: " << Teq << endl;
 			cout << "-t : (number) Initial sampling time of MC algorithm (in MCsweeps), default: " << Twait << endl;
@@ -348,9 +341,9 @@ int Params::read_params(int &argc, char **argv)
 			cout << endl;
 
 			cout << "Integrated alternative Potts models:" << endl;
-			cout << "-D : (flag) DGap model: Only the first moments of the gap statistics are fitted" << endl;
+			//cout << "-D : (flag) DGap model: Only the first moments of the gap statistics are fitted" << endl;
 			cout << "-N : (flag) GapNN model: Fit the first moments and the nearest-neighbors second moments gap statistics" << endl;
-			cout << "-H : (flag) Hmmer-like model: profile + couplings(gap, gap) for nearest-neighbours" << endl;
+			cout << "-D : (flag) Hmmer-like model: profile + couplings(gap, gap) for nearest-neighbours" << endl;
 
 			exit(0);
 		default:
