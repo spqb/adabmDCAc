@@ -50,6 +50,5 @@ Add the flag `--restore` to restart the training from the checkpoint saved in th
 ## MC options 
 
 ## To be done
-  - Give alphabet in input
   - Save and converge according to the Pearson correlation coefficient?
   - Complete the documentation
