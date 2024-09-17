@@ -30,27 +30,25 @@ Params::Params()
 	file_last_chain = 0;
 	initst = 0.;
 	init = 'R';
+	outputfolder = (char *)"output";
 	label = (char *)"nolabel";
 	ctype = (char *)"a";
 	file_3points = 0;
 	file_cc = 0;
 	print_samples = false;
-	Metropolis = true;
-	Gibbs = false;
+	Metropolis = false;
+	Gibbs = true;
 	rmgauge = false;
 	deczero = false;
 	dgap = false;
 	gapnn = false;
 	phmm = false;
-	blockwise = false;
 	compwise = true;
-	persistent = false;
+	persistent = true;
 	initdata = false;
 	overwrite = true;
 	adapt = true;
 	dec_sdkl = true;
-	dec_f = false;
-	dec_J = false;
 	sparsity = 0;
 	num_threads = 1;
 	rho = 0.9; // RMSprop reinforcement (learn_strat = 2)
@@ -60,7 +58,7 @@ Params::Params()
 	lrateJ = 5e-2;
 	lrateh = 5e-2;
 	lambda_e = 0.5;
-	conv = 8e-3;
+	conv = 0.95;
 	pseudocount = 0;
 	betaJ = 1.0;
 	betaH = 1.0;
@@ -70,13 +68,15 @@ Params::Params()
 	nprint = 100;
 	nprinteq = 0;
 	nprintfile = 500;
-	Teq = 20;
-	Nmc_starts = 1000;
-	Nmc_config = 50;
-	Twait = 10;
-	Twait_last = 10;
+	Teq = 10;
+	Nmc_starts = 10000;
+	Nmc_config = 1;
+	Twait = 0;
+	Twait_last = 1;
 	maxiter = 2000;
-	dec_steps = INT_MAX;
+	gsteps = 10;
+	nactive = 100;
+	drate = 0.01;
 	restore_flag = false;
 }
 
@@ -86,10 +86,9 @@ int Params::read_params(int &argc, char **argv)
 	while (1)
 	{
 		struct option long_options[] =
-		{
-			{"restore", no_argument, NULL, 'o'},
-			{NULL, 0, NULL, 0}
-		};
+			{
+				{"restore", no_argument, NULL, 'o'},
+				{NULL, 0, NULL, 0}};
 		int option_index = 0;
 		c = getopt_long(argc, argv, "a:b:c:d:e:f:g:hi:j:k:l:m:n:op:q:r:s:t:u:v:w:x:y:z:ABC:DE:FGHI:J:K:LMNPQRST:UVWX:Z", long_options, &option_index);
 		if (c == -1)
@@ -100,7 +99,8 @@ int Params::read_params(int &argc, char **argv)
 			restore_flag = true;
 			break;
 		case 'a':
-			learn_strat = atoi(optarg);
+			// learn_strat = atoi(optarg);
+			outputfolder = optarg;
 			break;
 		case 'b':
 			ctype = optarg;
@@ -122,7 +122,7 @@ int Params::read_params(int &argc, char **argv)
 			break;
 		case 'i':
 			maxiter = atoi(optarg);
-			if(maxiter == 0)
+			if (maxiter == 0)
 				nprinteq = 1;
 			break;
 		case 'k':
@@ -191,7 +191,7 @@ int Params::read_params(int &argc, char **argv)
 		case 'D':
 			phmm = true;
 			break;
-		//case 'D':
+		// case 'D':
 		//	dgap = true;
 		//	break;
 		case 'F':
@@ -237,6 +237,13 @@ int Params::read_params(int &argc, char **argv)
 			file_3points = optarg;
 			break;
 		case 'U':
+			nactive = atoi(optarg);
+			break;
+		case 'V':
+			drate = atof(optarg);
+			break;
+		/*
+		case 'U':
 			dec_sdkl = false;
 			dec_f = true;
 			dec_J = false;
@@ -252,8 +259,9 @@ int Params::read_params(int &argc, char **argv)
 			dec_J = false;
 			dec_sdkl = true;
 			break;
+		*/
 		case 'X':
-			dec_steps = atoi(optarg);
+			gsteps = atoi(optarg);
 			break;
 		case 'Z':
 			deczero = true;
@@ -261,9 +269,10 @@ int Params::read_params(int &argc, char **argv)
 		case 'h':
 			cout << "Here is the list of all the instructions" << endl;
 			cout << "Basic options:" << endl;
-			cout << "-k : (string) Label used for the output folder and files" << endl;
+			cout << "-a : (string) Output folder" << endl;
+			cout << "-k : (string) Label used for file names" << endl;
 			cout << "-y : (int) Seed of the random number generator, default: " << seed << endl;
-			cout << "--restore : Restore training from last saved parameters and MC chains (as in the output folder, see -k)" << endl;
+			cout << "--restore : Restore training from last saved parameters and MC chains (as in the output folder, see -a)" << endl;
 			cout << endl;
 
 			cout << "Options for training data handling:" << endl;
@@ -275,7 +284,7 @@ int Params::read_params(int &argc, char **argv)
 				 << "\tn : nucleic acids. " << endl
 				 << "\ti : Ising " << endl
 				 << "\te : epigenetic data. " << endl;
-			cout << "-b : (string) User-defined alphabet." << endl; 
+			cout << "-b : (string) User-defined alphabet." << endl;
 			cout << "-l : (number) Threshold used within the reweighting process, default: " << w_th << endl;
 			cout << endl;
 
@@ -286,7 +295,7 @@ int Params::read_params(int &argc, char **argv)
 			cout << endl;
 
 			cout << "Options for parameter training loop:" << endl;
-			cout << "-c : (number) Convergence tolerance, default: " << conv << endl;
+			cout << "-c : (number) Target Pearson at convergence, default: " << conv << endl;
 			cout << "-i : (number) Maximum number of iterations, default: " << maxiter << endl;
 			cout << "-z : (number) Print output every x iterations, default: " << nprint << endl;
 			cout << "-m : (number) Print Frobenius norms and parameters every x iterations, default: " << nprintfile << endl;
@@ -294,6 +303,7 @@ int Params::read_params(int &argc, char **argv)
 			cout << "-F : (flag) Do not overwrite temporary output" << endl;
 			cout << "-u : (number) Learning rate for couplings, default: " << lrateJ << endl;
 			cout << "-v : (number) Learning rate for fields, default: " << lrateh << endl;
+			/*
 			cout << "-a : (number) Learning strategy. Default: " << learn_strat << endl
 				 << "\t0: standard gradient descent" << endl
 				 << "\t1: adagrad" << endl
@@ -302,6 +312,7 @@ int Params::read_params(int &argc, char **argv)
 				 << "\t4. pseudo-Newton" << endl
 				 << "\t5. FIRE" << endl;
 			cout << endl;
+			*/
 
 			cout << "Options for integrating a set of fitnesses:" << endl;
 			cout << "-E : (optional file) sequences (use .fasta) with specified fitnesses (use .fit)" << endl;
@@ -322,10 +333,10 @@ int Params::read_params(int &argc, char **argv)
 			cout << "-C : (optional file) (i j a b) or (i j a b corr) input interaction graph" << endl;
 			cout << "-Z : (flag) Set all zero couplings to inactive" << endl;
 			cout << "-x : (number) Required sparsity (if not required, dense Potts is used) using pruning/activation of the couplings." << endl;
-			cout << "     For the pruning procedure, a sDKL-based method is assumed" << endl
-				 << "\tadd -U (flag) to use frequency-based instead" << endl
-				 << "\tadd -V (flag) to use coupling-based instead" << endl;
-			cout << "-X : (number) Decimate/activate every x steps even if not converged, default: infinite" << endl;
+			cout << "     For the pruning procedure, a sDKL-based method is assumed" << endl;
+			cout << "-U : (int) Activate X elements among the inactive/active couplings, default:" << nactive << endl;
+			cout << "-V : (float) Decimate a fraction X of the active couplings, default: " << drate << endl;
+			cout << "-X : (int) Activate every X gradient steps, default: " << gsteps << endl;
 			cout << endl;
 
 			cout << "Options for Monte Carlo sampling:" << endl;
@@ -341,7 +352,7 @@ int Params::read_params(int &argc, char **argv)
 			cout << endl;
 
 			cout << "Integrated alternative Potts models:" << endl;
-			//cout << "-D : (flag) DGap model: Only the first moments of the gap statistics are fitted" << endl;
+			// cout << "-D : (flag) DGap model: Only the first moments of the gap statistics are fitted" << endl;
 			cout << "-N : (flag) GapNN model: Fit the first moments and the nearest-neighbors second moments gap statistics" << endl;
 			cout << "-D : (flag) Hmmer-like model: profile + couplings(gap, gap) for nearest-neighbours" << endl;
 
@@ -351,16 +362,17 @@ int Params::read_params(int &argc, char **argv)
 			exit(1);
 		}
 	}
-	if (restore_flag) {
+	if (restore_flag)
+	{
 		char filename[1000];
-		sprintf(filename, "%s/Parameters_tmp_%s.dat", label, label);
-		file_params = (char *) malloc(strlen(filename) + 1);
-		strcpy(file_params,filename);
-		sprintf(filename, "%s/Weights_%s.dat", label, label);
-		file_w = (char *) malloc(strlen(filename) + 1);
+		sprintf(filename, "%s/%s_params.dat", outputfolder, label);
+		file_params = (char *)malloc(strlen(filename) + 1);
+		strcpy(file_params, filename);
+		sprintf(filename, "%s/%s_weights.dat", outputfolder, label);
+		file_w = (char *)malloc(strlen(filename) + 1);
 		strcpy(file_w, filename);
-		sprintf(filename, "%s/Last_configurations_%s.dat", label, label);
-		file_last_chain = (char *) malloc(strlen(filename) + 1);
+		sprintf(filename, "%s/%s_chains.dat", outputfolder, label);
+		file_last_chain = (char *)malloc(strlen(filename) + 1);
 		strcpy(file_last_chain, filename);
 	}
 
@@ -415,29 +427,6 @@ void Params::print_learning_strategy()
 		else
 			cout << " at the beginning of each iteration" << endl;
 	}
-
-	cout << "Learning strategy: " << endl;
-	switch (learn_strat)
-	{
-	case 0:
-		cout << "Using standard gradient descent with constant learning rate (for J " << lrateJ << " for h " << lrateh << ")" << endl;
-		break;
-	case 1:
-		cout << "Using adagrad" << endl;
-		break;
-	case 2:
-		cout << "Using RMSprop with reinforcement " << rho << endl;
-		break;
-	case 3:
-		cout << "Using search and converge with decay time " << tau << " and learning rate (for J " << lrateJ << ", for h " << lrateh << endl;
-		break;
-	case 4:
-		cout << "Using pseudo-Newton " << endl;
-		break;
-	case 5:
-		cout << "Using FIRE" << endl;
-		break;
-	}
 	if (sparsity > 0.0)
 	{
 		if (regJ1 != 0.0 || regJ2 != 0.0)
@@ -445,43 +434,8 @@ void Params::print_learning_strategy()
 			cout << "Regularization is not compatible with sparsification because of gauge choice conflicts" << endl;
 			exit(1);
 		}
-		cout << "Required sparsity " << sparsity;
-		// if (!compwise && !blockwise)
-		//{
-		//	cerr << endl
-		//		 << "Please use either -W or -B flags to specify decimation type. EXIT" << endl;
-		//	exit(EXIT_FAILURE);
-		// }
-		if (compwise && !blockwise)
-		{
-			cout << " using (component-wise) ";
-			if (dec_sdkl)
-				cout << "Kullback-Leibler based decimation/activation";
-			if (dec_f)
-				cout << "second moments based decimation/activation";
-			if (dec_J)
-				cout << "couplings based decimation/activation";
-		}
-		else if (!compwise && blockwise)
-		{
-			cout << " using (block-wise) ";
-			if (dec_sdkl)
-				cout << "Kullback-Leibler based decimation";
-			if (dec_f)
-				cout << "second moments based decimation (this is equivalent to a random choice!)";
-			if (dec_J)
-				cout << "couplings based decimation";
-		}
-		else if (compwise && blockwise)
-		{
-			cout << endl
-				 << "Please do not use -W and -B flags together! EXIT" << endl;
-			exit(EXIT_FAILURE);
-		}
-		if (dec_steps == INT_MAX)
-			cout << " at convergence" << endl;
-		else
-			cout << " every at most " << dec_steps << " steps" << endl;
+		cout << "Required sparsity " << sparsity << endl;
+		cout << "Decimate when reaching Pearson " << conv << " or activate every " << gsteps << " steps of gradient update" << endl;
 	}
 	if (regJ1 > 0)
 		cout << "L1 regularization on couplings: lambda " << regJ1 << endl;
@@ -491,46 +445,46 @@ void Params::print_learning_strategy()
 		cout << "Using pseudo-count: " << pseudocount << endl;
 }
 
-void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum, char *ene, char *corr, char *score, char *first, char *sec, char *third, char * lchain)
+void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum, char *ene, char *corr, char *score, char *first, char *sec, char *third, char *lchain)
 {
 	if (!conv)
 	{
 		if (overwrite)
 		{
-			sprintf(corr, "%s/Corr_tmp_%s.dat", label, label);
-			sprintf(par, "%s/Parameters_tmp_%s.dat", label, label);
-			sprintf(par_zsum, "%s/Parameters_tmp_zerosum_%s.dat", label, label);
-			sprintf(ene, "%s/Sample_tmp_%s.dat", label, label);
-			sprintf(score, "%s/Score_tmp_%s.dat", label, label);
-			sprintf(first, "%s/First_mom_tmp_%s.dat", label, label);
-			sprintf(sec, "%s/Sec_mom_tmp_%s.dat", label, label);
-			sprintf(third, "%s/Third_mom_tmp_%s.dat", label, label);
-			sprintf(lchain, "%s/Last_configurations_%s.dat", label, label);
+			sprintf(corr, "%s/%s_corr.dat", outputfolder, label);
+			sprintf(par, "%s/%s_params.dat", outputfolder, label);
+			sprintf(par_zsum, "%s/%s_params_zerosum.dat", outputfolder, label);
+			sprintf(ene, "%s/%s_samples.dat", outputfolder, label);
+			sprintf(score, "%s/%s_score.dat", outputfolder, label);
+			sprintf(first, "%s/%s_first_mom.dat", outputfolder, label);
+			sprintf(sec, "%s/%s_sec_mom.dat", outputfolder, label);
+			sprintf(third, "%s/%s_third_mom.dat", outputfolder, label);
+			sprintf(lchain, "%s/%s_chains.dat", outputfolder, label);
 		}
 		else
 		{
-			sprintf(corr, "%s/Corr_tmp_%d_%s.dat", label, iter, label);
-			sprintf(par, "%s/Parameters_tmp_%d_%s.dat", label, iter, label);
-			sprintf(par_zsum, "%s/Parameters_tmp_%d_zerosum_%s.dat", label, iter, label);
-			sprintf(ene, "%s/Sample_tmp_%d_%s.dat", label, iter, label);
-			sprintf(score, "%s/Score_tmp_%d_%s.dat", label, iter, label);
-			sprintf(first, "%s/First_mom_tmp_%d_%s.dat", label, iter, label);
-			sprintf(sec, "%s/Sec_mom_tmp_%d_%s.dat", label, iter, label);
-			sprintf(third, "%s/Third_mom_tmp_%d_%s.dat", label, iter, label);
-			sprintf(lchain, "%s/Last_configurations_%s.dat", label, label);
+			sprintf(corr, "%s/%s_corr_%d.dat", outputfolder, label, iter);
+			sprintf(par, "%s/%s_params_%d.dat", outputfolder, label, iter);
+			sprintf(par_zsum, "%s/%s_arameters_zerosum_%d.dat", outputfolder, label, iter);
+			sprintf(ene, "%s/%s_samples_%d.dat", outputfolder, label, iter);
+			sprintf(score, "%s/%s_score_%d.dat", outputfolder, label, iter);
+			sprintf(first, "%s/%s_first_mom_%d.dat", outputfolder, label, iter);
+			sprintf(sec, "%s/%s_sec_mom_%d.dat", outputfolder, label, iter);
+			sprintf(third, "%s/%s_third_mom_%d.dat", outputfolder, label, iter);
+			sprintf(lchain, "%s/%s_chains_%d.dat", outputfolder, label, iter);
 		}
 	}
 	else
 	{
-		sprintf(corr, "%s/Corr_conv_%s.dat", label, label);
-		sprintf(par, "%s/Parameters_conv_%s.dat", label, label);
-		sprintf(par_zsum, "%s/Parameters_conv_zerosum_%s.dat", label, label);
-		sprintf(ene, "%s/Sample_conv_%s.dat", label, label);
-		sprintf(score, "%s/Score_%s.dat", label, label);
-		sprintf(first, "%s/First_mom_conv_%s.dat", label, label);
-		sprintf(sec, "%s/Sec_mom_conv_%s.dat", label, label);
-		sprintf(third, "%s/Third_order_connected_corr_%s.dat", label, label);
-		sprintf(lchain, "%s/Last_configurations_%s.dat", label, label);
+		sprintf(corr, "%s/%s_corr.dat", outputfolder, label);
+		sprintf(par, "%s/%s_params.dat", outputfolder, label);
+		sprintf(par_zsum, "%s/%s_params_zerosum.dat", outputfolder, label);
+		sprintf(ene, "%s/%s_samples.dat", outputfolder, label);
+		sprintf(score, "%s/%s_score.dat", outputfolder, label);
+		sprintf(first, "%s/%s_first_mom.dat", outputfolder, label);
+		sprintf(sec, "%s/%s_sec_mom.dat", outputfolder, label);
+		sprintf(third, "%s/%s_third_mom.dat", outputfolder, label);
+		sprintf(lchain, "%s/%s_chains.dat", outputfolder, label);
 	}
 }
 
@@ -550,7 +504,7 @@ void Data_e::compute_w()
 {
 	ofstream fw;
 	char file_w[1000];
-	sprintf(file_w, "%s/Weights_e_%s.dat", params->label, params->label);
+	sprintf(file_w, "%s/%s_weights_e.dat", params->outputfolder, params->label);
 	fw.open(file_w);
 	w.clear();
 	double den = 0;
@@ -873,7 +827,7 @@ void Data::compute_w()
 		fflush(stdout);
 		ofstream fw;
 		char file_w[1000];
-		sprintf(file_w, "%s/Weights_%s.dat", label, label);
+		sprintf(file_w, "%s/%s_weights.dat", params->outputfolder, label);
 		fw.open(file_w);
 		int m = 0, n = 0, d = 0, l = 0;
 		for (m = 0; m < M; m++)
@@ -1151,7 +1105,7 @@ void Data::print_msa(char *filename)
 	fp.close();
 }
 
-int Data::print_statistics(char *file_sm, char *file_fm, char *file_tm, char *file_c, valarray<MYFLOAT> &corr, vector<MYFLOAT> &fm_s, vector<vector<MYFLOAT>> &sm_s, vector<MYFLOAT> &tm_s)
+int Data::print_statistics(char *file_sm, char *file_fm, char *file_tm, char *file_c, vector<MYFLOAT> &fm_s, vector<vector<MYFLOAT>> &sm_s, vector<MYFLOAT> &tm_s)
 {
 	ofstream fs;
 	ofstream ff;
@@ -1159,11 +1113,10 @@ int Data::print_statistics(char *file_sm, char *file_fm, char *file_tm, char *fi
 	ofstream fc;
 	fs.open(file_sm);
 	ff.open(file_fm);
-	fc.open(file_c);
-
-	for (int i = 0; i < int(corr.size()); i++)
-		fc << i << " " << corr[i] << endl;
-	fc.close();
+	//fc.open(file_c);
+	//for (int i = 0; i < int(corr.size()); i++)
+	//	fc << i << " " << corr[i] << endl;
+	//fc.close();
 	if (!strcmp(params->ctype, "i"))
 	{
 		for (int i = 0; i < L; i++)

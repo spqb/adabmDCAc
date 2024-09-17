@@ -71,7 +71,7 @@ class Model {
   void update_synth_msa(vector<unsigned char> & x1, vector<unsigned char> & x2);
   void init_model_stat(int ntm);
   void init_current_state(vector< vector<unsigned char> > & msa);
-  void init_last_chain(char * label);
+  void init_last_chain();
   void init_current_state_ising(vector< vector<unsigned char> > & msa);
   int remove_gauge_freedom(vector< vector<MYFLOAT> > & cov);
   int initialize_parameters(vector<MYFLOAT> & fm, vector<vector<MYFLOAT>> &cov);
@@ -105,7 +105,7 @@ class Model {
   void init_decimation_variables();
   int decimate_compwise(int c, int iter);
   int decimate_ising(int c, int iter);
-  int decimate_blockwise(int iter);
+  //int decimate_blockwise(int iter);
   void print_samples(char * filename);
   void print_last_chain(char * filename);
   void print_samples_ising(char * filename);

@@ -22,10 +22,10 @@ typedef double MYFLOAT;
 class Params
 {
 public:
-  char *file_msa, *file_freq, *file_w, *file_params, *file_msa_e, init, *label, *ctype, *file_3points, *file_cc, * file_last_chain;
-  bool restore_flag, deczero, print_samples, Metropolis, Gibbs, nprinteq, rmgauge, dgap, gapnn, phmm, blockwise, compwise, persistent, initdata, overwrite, adapt, dec_sdkl, dec_f, dec_J;
-  double initst, sparsity, rho, w_th, regJ1, regJ2, lrateJ, lrateh, conv, pseudocount, betaJ, betaH, lambda_e;
-  int tau, seed, learn_strat, nprint, nprintfile, Teq, Nmc_starts, Nmc_config, Twait, Twait_last, maxiter, dec_steps, num_threads;
+  char *file_msa, *file_freq, *file_w, *file_params, *file_msa_e, init, *label, *outputfolder, *ctype, *file_3points, *file_cc, * file_last_chain;
+  bool restore_flag, deczero, print_samples, Metropolis, Gibbs, nprinteq, rmgauge, dgap, gapnn, phmm, compwise, persistent, initdata, overwrite, adapt, dec_sdkl;
+  double initst, sparsity, rho, w_th, regJ1, regJ2, lrateJ, lrateh, conv, pseudocount, betaJ, betaH, lambda_e, drate;
+  int tau, seed, learn_strat, nprint, nprintfile, Teq, Nmc_starts, Nmc_config, Twait, Twait_last, maxiter, gsteps, num_threads, nactive;
 
   Params();
 
@@ -62,7 +62,7 @@ public:
   /******************** METHODS FOR OUTPUT ***********************************************************/
 
   void print_msa(char *filename);
-  int print_statistics(char *file_sm, char *file_fm, char *file_tm, char *file_c, valarray<MYFLOAT> &corr, vector<MYFLOAT> &fm_s, vector<vector<MYFLOAT>> &sm_s, vector<MYFLOAT> &tm_s);
+  int print_statistics(char *file_sm, char *file_fm, char *file_tm, char *file_c, vector<MYFLOAT> &fm_s, vector<vector<MYFLOAT>> &sm_s, vector<MYFLOAT> &tm_s);
 };
 
 /* CONTAINER FOR THE ENERGY MSA AND ITS FITNESS */

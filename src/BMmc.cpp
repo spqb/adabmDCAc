@@ -32,7 +32,7 @@ Model::Model(int _q, int _L, Params *_params, Stats *_mstat, vector<vector<unsig
   else
   {
     if (params->restore_flag)
-      init_last_chain(params->label);
+      init_last_chain();
     else
       init_current_state(msa);
   }
@@ -88,7 +88,7 @@ void Model::init_model_stat(int _ntm)
   mstat->oldold_state2.resize(params->num_threads, vector<unsigned char>(L));
 }
 
-void Model::init_last_chain(char *label)
+void Model::init_last_chain()
 {
   for (int t = 0; t < params->num_threads; t++)
   {
@@ -1536,120 +1536,6 @@ void Model::init_decimation_variables()
       }
     }
   }
-  else if (params->blockwise && params->sparsity > 0)
-  {
-    int n = L * (L - 1) / 2;
-    vector<int> tmp(2, 0);
-    idx.resize(n, tmp);
-    sorted_struct.clear();
-    sorted_struct.resize(n, 0);
-    tmp_idx.clear();
-    tmp_idx.resize(n, 0);
-    int k = 0;
-    for (int i = 0; i < L; i++)
-    {
-      for (int j = i + 1; j < L; j++)
-      {
-        idx[k][0] = i;
-        idx[k][1] = j;
-        sorted_struct[k] = 0.0;
-        k += 1;
-      }
-    }
-  }
-}
-
-// THIS NEEDS TO BE CHECKED
-int Model::decimate_blockwise(int iter)
-{
-  int i, j, a, b, index, m = 0;
-  double smalln = min(1e-30, params->pseudocount * 0.03);
-  double maxsdkl = -1e50;
-  int sumJ;
-  cout << "Decimating one block" << endl;
-  for (int k = 0; k < int(tmp_idx.size()); k++)
-  {
-    tmp_idx[k] = k;
-    i = idx[k][0];
-    j = idx[k][1];
-    sumJ = 0;
-    for (a = 0; a < q; a++)
-    {
-      for (b = 0; b < q; b++)
-        sumJ += decJ[i * q + a][j * q + b];
-    }
-    if (sumJ > 0)
-    {
-      m += 1;
-      if (params->dec_sdkl)
-      {
-        double auxsm = smalln * rand01() + mstat->sm_s[i * q + a][j * q + b];
-        double term0 = 0.0;
-        double num = 0.0;
-        double den = 0.0;
-        for (a = 0; a < q; a++)
-        {
-          for (b = 0; b < q; b++)
-          {
-            term0 += J[i * q + a][j * q + b] * auxsm;
-            num += J[i * q + a][j * q + b] * auxsm * exp(-J[i * q + a][j * q + b]);
-            den += auxsm * exp(-J[i * q + a][j * q + b]);
-          }
-        }
-        sorted_struct[k] = term0 - num / den;
-        sorted_struct[k] += rand01() * smalln;
-      }
-      else if (params->dec_f)
-      {
-        for (a = 0; a < q; a++)
-        {
-          for (b = 0; b < q; b++)
-          {
-            sorted_struct[k] += smalln * rand01() + fabs(mstat->sm_s[i * q + a][j * q + b]);
-          }
-        }
-      }
-      else if (params->dec_J)
-      {
-        for (a = 0; a < q; a++)
-        {
-          for (b = 0; b < q; b++)
-          {
-            sorted_struct[k] += smalln * rand01() + fabs(J[i * q + a][j * q + b]);
-          }
-        }
-      }
-      maxsdkl = max(maxsdkl, sorted_struct[k]);
-    }
-    else
-    {
-      double f = rand01();
-      sorted_struct[k] = int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
-    }
-  }
-  cout << "Non-zeros blocks before decimation " << m << endl;
-  quicksort(sorted_struct, tmp_idx, 0, int(tmp_idx.size()) - 1);
-
-  index = tmp_idx[0]; // take the one with smallest sDKL/sumof J / sumof sm
-  i = idx[index][0];
-  j = idx[index][1];
-  for (a = 0; a < q; a++)
-  {
-    for (b = 0; b < q; b++)
-    {
-      J[i * q + a][j * q + b] = 0.0;
-      J[j * q + b][i * q + a] = 0.0;
-      decJ[i * q + a][j * q + b] = 0;
-      decJ[j * q + b][i * q + a] = 0;
-    }
-  }
-
-  index = tmp_idx[0];
-  cout << "The sDKL associated with the removed block is " << sorted_struct[0] << " (i: " << idx[index][0] << " j: " << idx[index][1] << ")" << endl;
-  double nref = (L * (L - 1) * q * q) / 2;
-  model_sp += (q * q) / nref;
-  cout << "Sparsity after decimation is " << model_sp << endl;
-  return 0;
 }
 
 int Model::decimate_compwise(int c, int iter)
@@ -1673,14 +1559,6 @@ int Model::decimate_compwise(int c, int iter)
         double auxsm = smalln * rand01() + mstat->sm_s[i * q + a][j * q + b];
         sorted_struct[k] = J[i * q + a][j * q + b] * auxsm - (J[i * q + a][j * q + b] * exp(-J[i * q + a][j * q + b]) * auxsm) / (exp(-J[i * q + a][j * q + b]) * auxsm + 1 - auxsm);
         sorted_struct[k] += rand01() * smalln;
-      }
-      else if (params->dec_f)
-      {
-        sorted_struct[k] = smalln * rand01() + fabs(mstat->sm_s[i * q + a][j * q + b]);
-      }
-      else if (params->dec_J)
-      {
-        sorted_struct[k] = smalln * rand01() + fabs(J[i * q + a][j * q + b]);
       }
       maxsdkl = max(maxsdkl, sorted_struct[k]);
     }
@@ -1737,14 +1615,6 @@ int Model::decimate_ising(int c, int iter)
         sorted_struct[k] = J[i][j] * auxsm - num / den;
         sorted_struct[k] += rand01() * smalln;
       }
-      else if (params->dec_f)
-      {
-        sorted_struct[k] = smalln * rand01() + fabs(mstat->sm_s[i][j]);
-      }
-      else if (params->dec_J)
-      {
-        sorted_struct[k] = smalln * rand01() + fabs(J[i][j]);
-      }
       maxsdkl = max(maxsdkl, sorted_struct[k]);
     }
     else
@@ -1781,7 +1651,6 @@ int Model::activate_compwise(int c, int iter, vector<vector<MYFLOAT>> &sm)
   double smalln = min(1e-30, params->pseudocount * 0.03);
   double mindl = 1e50;
   double pc = 0.01;
-  printf("Activating %d couplings\n", c);
   for (int k = 0; k < int(tmp_idx.size()); k++)
   {
     tmp_idx[k] = k;
@@ -1789,7 +1658,7 @@ int Model::activate_compwise(int c, int iter, vector<vector<MYFLOAT>> &sm)
     j = idx[k][1];
     a = idx[k][2];
     b = idx[k][3];
-    if (decJ[i * q + a][j * q + b] < 0.5)
+    if (decJ[i * q + a][j * q + b] < 0.5) // inactive
     {
       m += 1;
       double f_d = (1 - pc) * sm[i * q + a][j * q + b] + pc / (q * q);
@@ -1799,14 +1668,20 @@ int Model::activate_compwise(int c, int iter, vector<vector<MYFLOAT>> &sm)
       mindl = min(mindl, sorted_struct[k]);
       // fprintf(fileout, "J %i %i %i %i %.2e %f %f\n", i, j, a, b, sorted_struct[k], J[i*q+a][j*q+b], sm_s[i*q+a][j*q+b]);
     }
-    else
+    else // "activate" already active couplings
     {
-      double f = rand01();
-      sorted_struct[k] = -int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
+      double f_d = (1 - pc) * sm[i * q + a][j * q + b] + pc / (q * q);
+      double f_m = (1 - pc) * mstat->sm_s[i * q + a][j * q + b] + pc / (q * q);
+      sorted_struct[k] = f_d * log(f_d / f_m) + (1 - f_d) * log((1 - f_d) / (1 - f_m));
+      sorted_struct[k] += rand01() * smalln;
+      mindl = min(mindl, sorted_struct[k]);
+    //  double f = rand01();
+    //  sorted_struct[k] = -int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
     }
   }
-  cout << "Inactive couplings before decimation " << m << endl;
+  cout << "Inactive couplings before activation " << m << endl;
   quicksort(sorted_struct, tmp_idx, 0, int(tmp_idx.size()) - 1);
+  int count_new_act = 0;
   for (int k = 0; k < c; k++)
   {
     index = tmp_idx[int(tmp_idx.size()) - 1 - k];
@@ -1814,20 +1689,20 @@ int Model::activate_compwise(int c, int iter, vector<vector<MYFLOAT>> &sm)
     j = idx[index][1];
     a = idx[index][2];
     b = idx[index][3];
-    if (decJ[i * q + a][j * q + b] > 0.5)
+    if (decJ[i * q + a][j * q + b] < 0.5) 
     {
-      printf("Error: coupling %d %d %d %d was already present\n", i, j, a, b);
-      exit(1.);
+      count_new_act++;
+      J[i * q + a][j * q + b] = 0;
+      J[j * q + b][i * q + a] = 0;
     }
-    J[i * q + a][j * q + b] = 0;
-    J[j * q + b][i * q + a] = 0;
     decJ[i * q + a][j * q + b] = 1;
     decJ[j * q + b][i * q + a] = 1;
   }
-  index = tmp_idx[int(tmp_idx.size()) - 1 - c];
-  fprintf(stdout, "Smallest DeltaL associated with added couplings is %.2e (i: %i j: %i a: %i b: %i) \n", sorted_struct[int(tmp_idx.size()) - 1 - c], idx[index][0], idx[index][1], idx[index][2], idx[index][3]);
+  //index = tmp_idx[int(tmp_idx.size()) - 1 - c];
+  //fprintf(stdout, "Smallest DeltaL associated with added couplings is %.2e (i: %i j: %i a: %i b: %i) \n", sorted_struct[int(tmp_idx.size()) - 1 - c], idx[index][0], idx[index][1], idx[index][2], idx[index][3]);
   double nref = (L * (L - 1) * q * q) / 2;
-  model_sp -= c / nref;
-  cout << "Sparsity after decimation is " << scientific << setprecision(3) << model_sp << endl;
+  printf("Activating %d couplings, %d new elements\n", c, count_new_act);
+  model_sp -= count_new_act / nref;
+  cout << "Sparsity after activation is " << scientific << setprecision(3) << model_sp << endl;
   return 0;
 }

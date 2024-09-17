@@ -43,9 +43,9 @@ int main(int argc, char **argv)
   params.read_params(argc, argv);
   long myseed = params.seed ? params.seed : time(NULL);
   srand(myseed);
-  cout << "Output files in " << params.label << " folder" << endl;
-  if (mkdir(params.label, 0777) == -1)
-    cerr << "Is the folder " << params.label << " already present?" << endl;
+  cout << "Output files in " << params.outputfolder << " folder" << endl;
+  if (mkdir(params.outputfolder, 0777) == -1)
+    cerr << "Is the folder " << params.outputfolder << " already present?" << endl;
   else
     cout << "Directory created" << endl;
   fflush(stdout);
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
     }
     data_e.energy = model.energy(data_e.msa);
     data_e.set_tg_energy();
-    sprintf(ene_fit, "%s/Fitness_init_%s.dat", params.label, params.label);
+    sprintf(ene_fit, "%s/%s_fitness_init.dat", params.outputfolder, params.label);
     data_e.print_energy(ene_fit);
     cout << "Spearman coefficient for energy fitting: " << spearman(data_e.fitness, data_e.energy) << endl;
   }
@@ -146,9 +146,19 @@ int main(int argc, char **argv)
       }
       if (data.tm.size() > 0)
         model.compute_third_order_correlations();
-      data.print_statistics(sec, first, third, corr, model.mstat->corr, model.mstat->fm_s, model.mstat->sm_s, model.mstat->tm_s);
+      data.print_statistics(sec, first, third, corr, model.mstat->fm_s, model.mstat->sm_s, model.mstat->tm_s);
     }
     lrav = model.update_parameters(data.fm, data.sm, iter, data_e);
+    if (iter > 0 && params.sparsity && model.model_sp < params.sparsity && model.pearson(data.cov, true) > params.conv)
+    {
+      int aux = ceil(model.n_active() * params.drate);
+      model.decimate_compwise(aux, iter);
+    }
+    if (params.sparsity && model.model_sp > params.sparsity && (iter % params.gsteps == 0 || iter == 0))
+    {
+      model.activate_compwise(params.nactive, iter, data.sm);
+    }
+    /*
     if (iter > 0 && params.sparsity && (errs.errnorm < params.conv || iter % params.dec_steps == 0))
     {
       // Print converged parameters before decimation
@@ -177,13 +187,13 @@ int main(int argc, char **argv)
         int aux = fabs(model.n_active() - model.n_total() * (1. - params.sparsity)) > (model.n_total() - model.n_active()) / 1000. ? ceil((model.n_total() - model.n_active()) / 1000.) : ceil(fabs(model.n_active() - model.n_total() * (1. - params.sparsity)));
         model.activate_compwise(aux, iter, data.sm);
       }
-    }
-    if (errs.errnorm < params.conv && params.sparsity == 0)
+    }*/
+    if (model.pearson(data.cov, true) > params.conv && params.sparsity == 0)
     {
       conv = true;
       cout << "Reached convergence of error, end of learning" << endl;
     }
-    if (fabs(model.model_sp - params.sparsity) <= 0.01 * params.sparsity && params.sparsity > 0 && errs.errnorm < params.conv)
+    if (fabs(model.model_sp - params.sparsity) <= 0.01 * params.sparsity && params.sparsity > 0 && model.pearson(data.cov, true) > params.conv)
     {
       conv = true;
       cout << "Reached convergence of error and desired sparsity, end of learning" << endl;
@@ -237,7 +247,7 @@ int main(int argc, char **argv)
 
     if (data.tm.size() > 0)
       model.compute_third_order_correlations();
-  data.print_statistics(sec, first, third, corr, model.mstat->corr, model.mstat->fm_s, model.mstat->sm_s, model.mstat->tm_s);
+  data.print_statistics(sec, first, third, corr, model.mstat->fm_s, model.mstat->sm_s, model.mstat->tm_s);
   if (params.print_samples)
   {
     if (!strcmp(params.ctype, "i"))
@@ -245,7 +255,7 @@ int main(int argc, char **argv)
     else
     {
       model.print_samples(ene);
-      sprintf(ene, "%s/Sample_natural_conv_%s.dat", params.label, params.label);
+      sprintf(ene, "%s/%s_sample_natural_conv.dat", params.outputfolder, params.label);
       model.print_natural_samples(ene, data.msa);
       if (params.file_msa_e)
       {
