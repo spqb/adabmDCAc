@@ -19,26 +19,29 @@ for a complete list of features.
 ### Learning a Potts model from a MSA
 
 ```
-./adabmDCA -f <MSA file> -k <label> -b <alphabet flag> -m <X iterations>
+./adabmDCA -f <MSA file> -a <output folder> -k <label> -m <nsave> -L
 ```
-  - Output files will be saved every X iterations specified in the `-m` flag;
-  - The output folder is named after the `label` specified in the `-k` flag.
+  - Output files will be saved every `nsave` iterations specified in the `-m` flag;
+  - The output folder is named after the `output folder` specified in the `-k` flag.
   - Use `-w <file name>` for ad-hoc weights file (optional).
+  - For RNA, set the flag `-b n`; for ad hoc alphabet set `-b <alphabet>` where `alphabet` is a string
 
 ### Learning a sparse Potts model from a MSA
 
 #### Decimation from converged run
 ```
-./adabmDCA -f <MSA file> -k <label> -I <argument> -A -c <convergence threshold> -x <required sparsity>
+./adabmDCA -f <MSA file> -k <label> -p <params> -c <convergence threshold> -x <required sparsity> -L
 ```
   - `-A` flag removes gauge invariance at the beginning of the training;
-  - `-I` allows the machine to start from a profile model for the fields, and the (rescaled by argument) covariance matrices for the couplings.
+  - Additional options `-X <drate>`
 
 #### Activation from profile model
 ```
-./adabmDCA -f <MSA file> -k <label> -I 0. -Z -c <convergence threshold> -x <required sparsity>
+./adabmDCA -f <MSA file> -k <label> -a <output folder> -I 0. -Z -c <convergence threshold> -x <required sparsity> -L -e <nsweep>
 ```
-  - `-Z` flag inactivates all couplings at the beginning of the training.
+  - `-Z` flag inactivates all couplings at the beginning of the training;
+  - `-I 0.` allows one to start from a profile model;
+  - Additional options `-U <nactive>`, `-X <gsteps>`.
 
 ### Restore training
 Add the flag `--restore` to restart the training from the checkpoint saved in the output folder.
@@ -47,8 +50,9 @@ Add the flag `--restore` to restart the training from the checkpoint saved in th
   - A lot of things
   - _Parameters file_. Missing couplings are assumed to be inactive when the training re-starts.
 
-## MC options 
-
 ## To be done
-  - Save and converge according to the Pearson correlation coefficient?
-  - Complete the documentation
+  - Compute DMS score, energies of a MSA
+  - Output/Input including alphabet in parameter file
+  - Sampling at convergence
+
+
