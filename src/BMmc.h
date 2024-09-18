@@ -114,6 +114,9 @@ class Model {
   int n_active();
   int activate_compwise(int c, int iter, vector<vector<MYFLOAT>> &sm);
   int print_natural_samples(char *filename, vector<vector<unsigned char>> &msa);
+  void get_Teq(char *filename);
+  double compute_twins_overlap(vector<vector<vector<unsigned char>>> &seq);
+  double compute_ind_overlap(vector<vector<vector<unsigned char>>> &seq);
 };
 
 

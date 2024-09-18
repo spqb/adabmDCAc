@@ -31,7 +31,7 @@ public:
 
   int read_params(int &argc, char **argv);
   void print_learning_strategy();
-  void construct_filenames(int iter, bool conv, char *par, char *par_zsum, char *ene, char *corr, char *score, char *first, char *sec, char *third, char * lchain);
+  void construct_filenames(int iter, bool conv, char *par, char *par_zsum, char *ene, char *corr, char *score, char *first, char *sec, char *third, char * lchain, char * eqfile);
 };
 
 class Data

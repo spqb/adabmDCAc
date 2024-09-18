@@ -56,7 +56,7 @@ int main(int argc, char **argv)
   params.print_learning_strategy();
   Model model(data.q, data.L, &params, &mstat, data.msa, data.tm.size(), &data.tm_index);
   model.initialize_parameters(data.fm, data.cov);
-  if(!params.restore_flag && !params.file_params)
+  if (!params.restore_flag && !params.file_params)
     model.initial_decimation(data.cov);
   Data_e data_e(&params, data.q, data.L, data.Meff);
   char ene_fit[1000];
@@ -88,6 +88,7 @@ int main(int argc, char **argv)
   char third[1000];
   char corr[1000];
   char lchain[1000];
+  char eqfile[1000];
   int iter = 0;
   int in_time = time(NULL);
   bool conv = (params.maxiter > 0) ? false : true;
@@ -118,22 +119,22 @@ int main(int argc, char **argv)
         peae = pearson(data_e.tg_energy, data_e.energy);
         stde = data_e.destd();
       }
-      fprintf(stdout, "it: %d el_time: %d Teq: %d Twait: %d  ", iter, int(time(NULL)-in_time), params.Teq, params.Twait);
+      fprintf(stdout, "it: %d el_time: %d Teq: %d Twait: %d  ", iter, int(time(NULL) - in_time), params.Teq, params.Twait);
       fprintf(stdout, "lrav: %.2e sp: %.2e ", lrav, model.model_sp);
       fprintf(stdout, "cov_err: %.2e pears_act: %.2e pears_all: %.2e", errs.errnorm, model.pearson(data.cov, false), model.pearson(data.cov, true));
-      //cout << " merr_fm: " << setprecision(2) << errs.merrh << " merr_sm: " << setprecision(2) << errs.merrJ << " cov_err: " << setprecision(2) << errs.errnorm;
-      // cout << " averr_fm: " << errs.averrh << " averr_sm: " << errs.averrJ;
+      // cout << " merr_fm: " << setprecision(2) << errs.merrh << " merr_sm: " << setprecision(2) << errs.merrJ << " cov_err: " << setprecision(2) << errs.errnorm;
+      //  cout << " averr_fm: " << errs.averrh << " averr_sm: " << errs.averrJ;
       if (params.file_msa_e)
         fprintf(stdout, "sp_e: %.1e pears_e: %.1e stde: %.1e \n", spe, peae, stde);
-        //cout << " sp_e: " << spe << " pears_e: " << peae << " stde: " << stde << endl;
+      // cout << " sp_e: " << spe << " pears_e: " << peae << " stde: " << stde << endl;
       else
-        //cout << endl;
+        // cout << endl;
         fprintf(stdout, "\n");
       fflush(stdout);
     }
     if (iter > 0 && (iter % params.nprintfile == 0))
     {
-      params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain);
+      params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain, eqfile);
       print_frobenius_norms(model.h, model.J, model.L, model.q, score, par_zsum);
       model.print_model(par);
       model.print_last_chain(lchain);
@@ -212,33 +213,19 @@ int main(int argc, char **argv)
   fflush(stdout);
   if (!params.maxiter)
   {
-    bool eqmc = false;
-    while (!eqmc)
-    {
-      if (strcmp(params.ctype, "i") == 0)
-      {
-        eqmc = model.sample_ising(data.msa);
-      }
-      else
-        eqmc = model.sample(data.msa);
-      model.compute_errors(data.fm, data.sm, data.cov, errs);
-      fprintf(stdout, "it: %d el_time: %d Teq: %d Twait: %d  ", iter, int(time(NULL)-in_time), params.Teq, params.Twait);
-      fprintf(stdout, "lrav: %.2e sp: %.2e ", lrav, model.model_sp);
-      fprintf(stdout, "cov_err: %.2e pears_act: %.2e pears_all: %.2e\n", errs.errnorm, model.pearson(data.cov, false), model.pearson(data.cov, true));
-      fflush(stdout);
-    }
-  }
-  else
-  {
+    model.get_Teq(eqfile);
+    fprintf(stdout, "Sampling may take a while...");
+    fflush(stdout);
     if (strcmp(params.ctype, "i") == 0)
-    {
       model.sample_ising(data.msa);
-    }
     else
+    {
       model.sample(data.msa);
+    }
+     fprintf(stdout, "done\n");
+     fflush(stdout);
   }
-
-  params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain);
+  params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain, eqfile);
   print_frobenius_norms(model.h, model.J, model.L, model.q, score, par_zsum);
   model.print_model(par);
   model.print_last_chain(lchain);

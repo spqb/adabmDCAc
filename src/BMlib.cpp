@@ -445,7 +445,7 @@ void Params::print_learning_strategy()
 		cout << "Using pseudo-count: " << pseudocount << endl;
 }
 
-void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum, char *ene, char *corr, char *score, char *first, char *sec, char *third, char *lchain)
+void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum, char *ene, char *corr, char *score, char *first, char *sec, char *third, char *lchain, char *eqfile)
 {
 	if (!conv)
 	{
@@ -460,6 +460,7 @@ void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum,
 			sprintf(sec, "%s/%s_sec_mom.dat", outputfolder, label);
 			sprintf(third, "%s/%s_third_mom.dat", outputfolder, label);
 			sprintf(lchain, "%s/%s_chains.dat", outputfolder, label);
+			sprintf(eqfile, "%s/%s_seqid.dat", outputfolder, label);
 		}
 		else
 		{
@@ -472,6 +473,7 @@ void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum,
 			sprintf(sec, "%s/%s_sec_mom_%d.dat", outputfolder, label, iter);
 			sprintf(third, "%s/%s_third_mom_%d.dat", outputfolder, label, iter);
 			sprintf(lchain, "%s/%s_chains_%d.dat", outputfolder, label, iter);
+			sprintf(eqfile, "%s/%s_seqid_%d.dat", outputfolder, label, iter);
 		}
 	}
 	else
@@ -485,6 +487,7 @@ void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum,
 		sprintf(sec, "%s/%s_sec_mom.dat", outputfolder, label);
 		sprintf(third, "%s/%s_third_mom.dat", outputfolder, label);
 		sprintf(lchain, "%s/%s_chains.dat", outputfolder, label);
+		sprintf(eqfile, "%s/%s_seqid.dat", outputfolder, label);
 	}
 }
 
