@@ -46,6 +46,12 @@ for a complete list of features.
 ### Restore training
 Add the flag `--restore` to restart the training from the checkpoint saved in the output folder.
 
+### Sampling
+Use
+```
+./adabmDCA -p <params> -f <MSA> -i 0 -S -L
+```
+
 ## Output files
   - A lot of things
   - _Parameters file_. Missing couplings are assumed to be inactive when the training re-starts.
@@ -53,6 +59,3 @@ Add the flag `--restore` to restart the training from the checkpoint saved in th
 ## To be done
   - Compute DMS score, energies of a MSA
   - Output/Input including alphabet in parameter file
-  - Sampling at convergence
-
-
