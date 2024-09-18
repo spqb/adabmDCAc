@@ -300,7 +300,7 @@ int convert_char_potts(char a)
 	return (int)(a - '0');
 }
 
-int convert_char_adhoc(char a, char* abc)
+int convert_char_adhoc(char a, char *abc)
 {
 	std::string abcd;
 	abcd = abc;

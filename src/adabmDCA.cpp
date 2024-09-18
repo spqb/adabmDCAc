@@ -222,8 +222,8 @@ int main(int argc, char **argv)
     {
       model.sample(data.msa);
     }
-     fprintf(stdout, "done\n");
-     fflush(stdout);
+    fprintf(stdout, "done\n");
+    fflush(stdout);
   }
   params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain, eqfile);
   print_frobenius_norms(model.h, model.J, model.L, model.q, score, par_zsum);

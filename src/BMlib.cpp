@@ -1116,10 +1116,10 @@ int Data::print_statistics(char *file_sm, char *file_fm, char *file_tm, char *fi
 	ofstream fc;
 	fs.open(file_sm);
 	ff.open(file_fm);
-	//fc.open(file_c);
-	//for (int i = 0; i < int(corr.size()); i++)
+	// fc.open(file_c);
+	// for (int i = 0; i < int(corr.size()); i++)
 	//	fc << i << " " << corr[i] << endl;
-	//fc.close();
+	// fc.close();
 	if (!strcmp(params->ctype, "i"))
 	{
 		for (int i = 0; i < L; i++)

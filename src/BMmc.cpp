@@ -1718,7 +1718,7 @@ double Model::compute_twins_overlap(vector<vector<vector<unsigned char>>> &seq)
     for (int s = 0; s < params->Nmc_starts / 2; s++)
     {
       nc++;
-      av_ov += overlap(seq[t][2 * s], seq[t][2 * s + 1])/ (L*1.0);
+      av_ov += overlap(seq[t][2 * s], seq[t][2 * s + 1]) / (L * 1.0);
     }
   }
   return av_ov / nc;
@@ -1733,9 +1733,10 @@ double Model::compute_ind_overlap(vector<vector<vector<unsigned char>>> &seq)
   {
     for (int s = 0; s < params->Nmc_starts / 2; s++)
     {
-      for (int d = s + 1; d < params->Nmc_starts / 2 - 1; d++) {
-        av_ov_odd += overlap(seq[t][2 * s + 1], seq[t][2 * d + 1])/(L*1.0);
-      	nc++;
+      for (int d = s + 1; d < params->Nmc_starts / 2 - 1; d++)
+      {
+        av_ov_odd += overlap(seq[t][2 * s + 1], seq[t][2 * d + 1]) / (L * 1.0);
+        nc++;
       }
     }
   }
@@ -1745,9 +1746,10 @@ double Model::compute_ind_overlap(vector<vector<vector<unsigned char>>> &seq)
   {
     for (int s = 0; s < params->Nmc_starts / 2; s++)
     {
-      for (int d = s + 1; d < params->Nmc_starts / 2; d++) {
-        av_ov_even += overlap(seq[t][2 * s], seq[t][2 * d]) / (L*1.0);
-      	nc++;
+      for (int d = s + 1; d < params->Nmc_starts / 2; d++)
+      {
+        av_ov_even += overlap(seq[t][2 * s], seq[t][2 * d]) / (L * 1.0);
+        nc++;
       }
     }
   }
@@ -1755,9 +1757,9 @@ double Model::compute_ind_overlap(vector<vector<vector<unsigned char>>> &seq)
   return (av_ov_even + av_ov_odd) * 0.5;
 }
 
-void Model::get_Teq(char * filename)
+void Model::get_Teq(char *filename)
 {
-		
+
   FILE *fp = 0;
   fp = fopen(filename, "w");
   double ov_ind, ov_twins;
@@ -1794,9 +1796,10 @@ void Model::get_Teq(char * filename)
     ov_twins = compute_twins_overlap(mstat->curr_state);
     ov_ind = compute_ind_overlap(mstat->curr_state);
     fprintf(fp, "%d %lf %lf\n", params->Teq, ov_twins, ov_ind);
-    if (ov_twins <= ov_ind) {
+    if (ov_twins <= ov_ind)
+    {
       eqmc = true;
-    	params->Teq *= 5;
+      params->Teq *= 5;
     }
     else
       params->Teq++;
