@@ -968,7 +968,6 @@ bool Model::sample(vector<vector<unsigned char>> &msa)
   }
   update_statistics();
   mstat->corr /= params->Nmc_starts;
-  printf("4\n");
   double nse = params->Nmc_config * (params->Nmc_starts / 2);
   double qext = mstat->qs[0] / nse;
   double dqext = sqrt(mstat->qs[1] / (nse - 1) - mstat->qs[0] * mstat->qs[0] / nse / (nse - 1)) / sqrt(nse);
