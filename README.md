@@ -33,7 +33,7 @@ for a complete list of features.
 ./adabmDCA -f <MSA file> -k <label> -p <params> -c <convergence threshold> -x <required sparsity> -L
 ```
   - `-A` flag removes gauge invariance at the beginning of the training;
-  - Additional options `-X <drate>`
+  - Additional options `-V <drate>`
 
 #### Activation from profile model
 ```
