@@ -211,6 +211,7 @@ int main(int argc, char **argv)
   /* FINAL OPERATIONS */
   cout << "****** Final sampling ******" << endl;
   fflush(stdout);
+  params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain, eqfile);
   if (!params.maxiter)
   {
     model.get_Teq(eqfile);
@@ -222,32 +223,39 @@ int main(int argc, char **argv)
     {
       model.sample(data.msa);
     }
-    fprintf(stdout, "done\n");
-    fflush(stdout);
-  }
-  params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain, eqfile);
-  print_frobenius_norms(model.h, model.J, model.L, model.q, score, par_zsum);
-  model.print_model(par);
-  model.print_last_chain(lchain);
-
-  if (params.print_samples)
-
-    if (data.tm.size() > 0)
-      model.compute_third_order_correlations();
-  data.print_statistics(sec, first, third, corr, model.mstat->fm_s, model.mstat->sm_s, model.mstat->tm_s);
-  if (params.print_samples)
-  {
     if (!strcmp(params.ctype, "i"))
       model.print_samples_ising(ene);
     else
-    {
       model.print_samples(ene);
-      sprintf(ene, "%s/%s_sample_natural_conv.dat", params.outputfolder, params.label);
-      model.print_natural_samples(ene, data.msa);
-      if (params.file_msa_e)
+
+    fprintf(stdout, "done\n");
+    fflush(stdout);
+  }
+  else
+  {
+    print_frobenius_norms(model.h, model.J, model.L, model.q, score, par_zsum);
+    model.print_model(par);
+    model.print_last_chain(lchain);
+
+    if (params.print_samples)
+
+      if (data.tm.size() > 0)
+        model.compute_third_order_correlations();
+    data.print_statistics(sec, first, third, corr, model.mstat->fm_s, model.mstat->sm_s, model.mstat->tm_s);
+    if (params.print_samples)
+    {
+      if (!strcmp(params.ctype, "i"))
+        model.print_samples_ising(ene);
+      else
       {
-        data_e.energy = model.energy(data_e.msa);
-        data_e.print_energy(ene_fit);
+        model.print_samples(ene);
+        sprintf(ene, "%s/%s_sample_natural_conv.dat", params.outputfolder, params.label);
+        model.print_natural_samples(ene, data.msa);
+        if (params.file_msa_e)
+        {
+          data_e.energy = model.energy(data_e.msa);
+          data_e.print_energy(ene_fit);
+        }
       }
     }
   }

@@ -99,7 +99,7 @@ int print_frobenius_norms(vector<T> &h, vector<vector<T>> &J, int L, int q, char
 	ofstream fp;
 	ofstream fpp;
 	fp.open(normfile);
-	fpp.open(parfile);
+	//fpp.open(parfile);
 
 	vector<T> hzs = h;
 	vector<vector<T>> Jzs = J;
@@ -148,7 +148,7 @@ int print_frobenius_norms(vector<T> &h, vector<vector<T>> &J, int L, int q, char
 				hzs[i * q + a] += mean_b[a] - mean_all;
 		}
 	}
-
+	/*
 	for (int i = 0; i < L; i++)
 	{
 		for (int j = i + 1; j < L; j++)
@@ -163,7 +163,7 @@ int print_frobenius_norms(vector<T> &h, vector<vector<T>> &J, int L, int q, char
 	for (int i = 0; i < L; i++)
 		for (int a = 0; a < q; a++)
 			fpp << "h " << i << " " << a << " " << std::fixed << setprecision(5) << hzs[i * q + a] << endl;
-
+	*/
 	int nf = 0;
 	double f = 0;
 	double fb[L][L];

@@ -49,6 +49,7 @@ Params::Params()
 	overwrite = true;
 	adapt = true;
 	dec_sdkl = true;
+	get_abc = false;
 	sparsity = 0;
 	num_threads = 1;
 	rho = 0.9; // RMSprop reinforcement (learn_strat = 2)
@@ -66,7 +67,7 @@ Params::Params()
 	seed = 0;
 	learn_strat = 0;
 	nprint = 100;
-	nprinteq = 0;
+	nprinteq = false;
 	nprintfile = 500;
 	Teq = 10;
 	Nmc_starts = 10000;
@@ -123,7 +124,10 @@ int Params::read_params(int &argc, char **argv)
 		case 'i':
 			maxiter = atoi(optarg);
 			if (maxiter == 0)
-				nprinteq = 1;
+			{
+				//nprinteq = true;
+				get_abc = true;
+			}
 			break;
 		case 'k':
 			label = optarg;
@@ -726,6 +730,8 @@ void Data_e::print_energy(char *filename)
 Data::Data(Params *_params) : params(_params)
 {
 	cout << "****** Initializing data structures ******" << endl;
+	if (params->get_abc)
+		read_alphabet();
 	q = print_alphabet(params->ctype);
 	if (params->file_msa)
 	{
@@ -739,6 +745,52 @@ Data::Data(Params *_params) : params(_params)
 		read_freq();
 	}
 	load_third_order_indices();
+}
+
+void Data::read_alphabet()
+{
+	char *filename = params->file_params;
+	cout << "Reading alphabet from parameter file " << params->file_params << endl;
+	FILE *filepar;
+	if (!filename || !(filepar = fopen(filename, "r")))
+	{
+		cerr << "I couldn't open " << filename << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	char buffer[100];
+	char c, a;
+	std::string abc;
+	int i;
+	double tmp;
+	int gap = 0;
+	L = 0;
+	while (!feof(filepar) && fgets(buffer, 100, filepar) && sscanf(buffer, "%c ", &c) == 1)
+	{
+		switch (c)
+		{
+		case 'H':
+			sscanf(buffer, "H %d %c %lf \n", &i, &a, &tmp);
+			if (i == 0)
+				gap = 1;
+			L = max(L, i);
+			if (!(abc.find(a) < abc.length()))
+				abc += a;
+			break;
+		case 'h':
+			sscanf(buffer, "h %d %c %lf \n", &i, &a, &tmp);
+			if (i == 0)
+				gap = 1;
+			L = max(L, i);
+			if (!(abc.find(a) < abc.length()))
+				abc += a;
+			break;
+		}
+	}
+	L += gap;
+	cout << "L: " << L << " q: " << abc.size() << endl;
+	params->ctype = new char[abc.size() + 1]; // memory allocated
+	strcpy(params->ctype, abc.c_str());
 }
 
 void Data::read_msa()
@@ -1147,6 +1199,7 @@ int Data::print_statistics(char *file_sm, char *file_fm, char *file_tm, char *fi
 	}
 	else
 	{
+		vector<char> abc = alphabet(params->ctype);
 		for (int i = 0; i < L; i++)
 		{
 			for (int j = i + 1; j < L; j++)
@@ -1154,7 +1207,7 @@ int Data::print_statistics(char *file_sm, char *file_fm, char *file_tm, char *fi
 				for (int a = 0; a < q; a++)
 				{
 					for (int b = 0; b < q; b++)
-						fs << i << " " << j << " " << a << " " << b << " " << std::fixed << setprecision(5) << sm[i * q + a][j * q + b] << " "
+						fs << i << " " << j << " " << abc[a] << " " << abc[b] << " " << std::fixed << setprecision(5) << sm[i * q + a][j * q + b] << " "
 						   << std::fixed << setprecision(5) << sm_s[i * q + a][j * q + b] << " "
 						   << std::fixed << setprecision(5) << cov[i * q + a][j * q + b] << " "
 						   << std::fixed << setprecision(5) << sm_s[i * q + a][j * q + b] - fm_s[i * q + a] * fm_s[j * q + b] << endl;
@@ -1165,7 +1218,7 @@ int Data::print_statistics(char *file_sm, char *file_fm, char *file_tm, char *fi
 		{
 			for (int a = 0; a < q; a++)
 			{
-				ff << i << " " << a << " " << std::fixed << setprecision(5) << fm[i * q + a] << " " << std::fixed << setprecision(5) << fm_s[i * q + a] << endl;
+				ff << i << " " << abc[a] << " " << std::fixed << setprecision(5) << fm[i * q + a] << " " << std::fixed << setprecision(5) << fm_s[i * q + a] << endl;
 			}
 		}
 		if (int(tm_index.size()) > 0)
@@ -1182,7 +1235,7 @@ int Data::print_statistics(char *file_sm, char *file_fm, char *file_tm, char *fi
 				b = tm_index[ind][4];
 				c = tm_index[ind][5];
 				aux = tm[ind] - sm[i * q + a][j * q + b] * fm[k * q + c] - sm[i * q + a][k * q + c] * fm[j * q + b] - sm[j * q + b][k * q + c] * fm[i * q + a] + 2 * fm[i * q + a] * fm[j * q + b] * fm[k * q + c];
-				ft << i << " " << j << " " << k << " " << a << " " << b << " " << c << " " << std::fixed << setprecision(5) << aux << " " << std::fixed << setprecision << tm_s[ind] << endl;
+				ft << i << " " << j << " " << k << " " << abc[a] << " " << abc[b] << " " << abc[c] << " " << std::fixed << setprecision(5) << aux << " " << std::fixed << setprecision << tm_s[ind] << endl;
 			}
 			ft.close();
 		}

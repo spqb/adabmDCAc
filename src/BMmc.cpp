@@ -245,8 +245,8 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
     else
     {
       int i, j, a, b;
+      char ai, bi, c;
       char buffer[100];
-      char c;
       double tmp;
       // Only couplings in the file are set to non-zero, and decJ = 1. Otherwise decJ is assumed = 0
       if (strcmp(params->ctype, "i") == 0)
@@ -292,7 +292,9 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
           }
           else
           {
-            sscanf(buffer, "J %d %d %d %d %lf \n", &i, &j, &a, &b, &tmp);
+            sscanf(buffer, "J %d %d %c %c %lf \n", &i, &j, &ai, &bi, &tmp);
+            a = convert_char(ai, params->ctype);
+            b = convert_char(bi, params->ctype);
             J[i * q + a][j * q + b] = params->betaJ * tmp;
             J[j * q + b][i * q + a] = params->betaJ * tmp;
             decJ[i * q + a][j * q + b] = 1;
@@ -312,7 +314,9 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
           }
           else
           {
-            sscanf(buffer, "j %d %d %d %d %lf \n", &i, &j, &a, &b, &tmp);
+            sscanf(buffer, "j %d %d %c %c %lf \n", &i, &j, &ai, &bi, &tmp);
+            a = convert_char(ai, params->ctype);
+            b = convert_char(bi, params->ctype);
             J[i * q + a][j * q + b] = params->betaJ * tmp;
             J[j * q + b][i * q + a] = params->betaJ * tmp;
             decJ[i * q + a][j * q + b] = 1;
@@ -328,7 +332,8 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
           }
           else
           {
-            sscanf(buffer, "H %d %d %lf \n", &i, &a, &tmp);
+            sscanf(buffer, "H %d %c %lf \n", &i, &ai, &tmp);
+            a = convert_char(ai, params->ctype);
             h[i * q + a] = params->betaH * tmp;
           }
           break;
@@ -340,7 +345,8 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
           }
           else
           {
-            sscanf(buffer, "h %d %d %lf \n", &i, &a, &tmp);
+            sscanf(buffer, "h %d %c %lf \n", &i, &ai, &tmp);
+            a = convert_char(ai, params->ctype);
             h[i * q + a] = params->betaH * tmp;
           }
           break;
@@ -348,7 +354,6 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
       }
       fclose(filep);
     }
-    cout << "done" << endl;
     double nref = (L * (L - 1) * q * q) / 2;
     model_sp = 1. - n / nref;
     cout << "Sparsity after initialization: " << model_sp << endl;
@@ -549,6 +554,7 @@ int Model::print_model(char *filename)
 {
   ofstream fp;
   fp.open(filename);
+  vector<char> abc = alphabet(params->ctype); 
   if (strcmp(params->ctype, "i") == 0)
   {
     for (int i = 0; i < L; i++)
@@ -574,7 +580,7 @@ int Model::print_model(char *filename)
             for (int b = 0; b < q; b++)
             {
               if (decJ[i * q + a][j * q + b] == 1)
-                fp << "J " << i << " " << j << " " << a << " " << b << " " << std::fixed << setprecision(5) << J[i * q + a][j * q + b] << endl;
+                fp << "J " << i << " " << j << " " << abc[a] << " " << abc[b] << " " << std::fixed << setprecision(5) << J[i * q + a][j * q + b] << endl;
             }
           }
         }
@@ -582,7 +588,7 @@ int Model::print_model(char *filename)
     for (int i = 0; i < L; i++)
     {
       for (int a = 0; a < q; a++)
-        fp << "h " << i << " " << a << " " << std::fixed << setprecision(5) << h[i * q + a] << endl;
+        fp << "h " << i << " " << abc[a] << " " << std::fixed << setprecision(5) << h[i * q + a] << endl;
     }
   }
 
@@ -1094,8 +1100,9 @@ void Model::print_samples(char *filename)
     for (int m = 0; m < int(mstat->synth_msa[t].size()); m++)
     {
       x = mstat->synth_msa[t][m];
-      fprintf(fp, ">THREAD%d_CHAIN%d_SAMPLE%d h_en %lf J_en %lf \n", t,
-              m / params->Nmc_config, m % params->Nmc_config, prof_energy(x), DCA_energy(x));
+      //fprintf(fp, ">THREAD%d_CHAIN%d_SAMPLE%d DCAscore %lf\n", t,
+      //        m / params->Nmc_config, m % params->Nmc_config, prof_energy(x) + DCA_energy(x));
+      fprintf(fp, ">sequence %d | DCAenergy %lf\n", m, prof_energy(x) + DCA_energy(x));
       for (int i = 0; i < L; i++)
         fprintf(fp, "%c", abc[x[i]]);
       fprintf(fp, "\n");
@@ -1798,7 +1805,7 @@ void Model::get_Teq(char *filename)
     if (ov_twins <= ov_ind)
     {
       eqmc = true;
-      params->Teq *= 5;
+      params->Teq *= 10;
     }
     else
       params->Teq++;
