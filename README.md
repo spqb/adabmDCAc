@@ -30,18 +30,19 @@ for a complete list of features.
 
 #### Decimation from converged run
 ```
-./adabmDCA -f <MSA file> -k <label> -p <params> -c <convergence threshold> -x <required sparsity> -L
+./adabmDCA -f <MSA file> -k <label> -a <output folder> -p <params> -c <convergence threshold> -x <required sparsity> -L
 ```
   - `-A` flag removes gauge invariance at the beginning of the training;
   - Additional options `-V <drate>`
 
 #### Activation from profile model
 ```
-./adabmDCA -f <MSA file> -k <label> -a <output folder> -I 0. -Z -c <convergence threshold> -x <required sparsity> -L -e <nsweep>
+./adabmDCA -f <MSA file> -k <label> -a <output folder> -I 0. -Z -c <convergence threshold> -X <gsteps> -L -e <nsweep>
 ```
   - `-Z` flag inactivates all couplings at the beginning of the training;
   - `-I 0.` allows one to start from a profile model;
-  - Additional options `-U <nactive>`, `-X <gsteps>`.
+  - Additional options `-U <nactive>`;
+  - Convergence at target Pearson whatever the density.
 
 ### Restore training
 Add the flag `--restore` to restart the training from the checkpoint saved in the output folder.
