@@ -1512,7 +1512,7 @@ int Model::n_links()
 
 void Model::init_decimation_variables()
 {
-  if (params->sparsity > 0 && params->compwise)
+  if (params->sparsity > 0 || params->gsteps > 0)
   {
     idx.clear();
     vector<int> tmp(4, 0);
@@ -1651,7 +1651,7 @@ int Model::decimate_ising(int c, int iter)
   return 0;
 }
 
-int Model::activate_compwise(int c, int iter, vector<vector<MYFLOAT>> &sm)
+int Model::activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm)
 {
   int i, j, a, b, index, m = 0;
   double smalln = min(1e-30, params->pseudocount * 0.03);
@@ -1674,21 +1674,23 @@ int Model::activate_compwise(int c, int iter, vector<vector<MYFLOAT>> &sm)
       mindl = min(mindl, sorted_struct[k]);
       // fprintf(fileout, "J %i %i %i %i %.2e %f %f\n", i, j, a, b, sorted_struct[k], J[i*q+a][j*q+b], sm_s[i*q+a][j*q+b]);
     }
-    else // "activate" already active couplings
+    else 
     {
+      
       double f_d = (1 - pc) * sm[i * q + a][j * q + b] + pc / (q * q);
       double f_m = (1 - pc) * mstat->sm_s[i * q + a][j * q + b] + pc / (q * q);
       sorted_struct[k] = f_d * log(f_d / f_m) + (1 - f_d) * log((1 - f_d) / (1 - f_m));
       sorted_struct[k] += rand01() * smalln;
       mindl = min(mindl, sorted_struct[k]);
-      //  double f = rand01();
-      //  sorted_struct[k] = -int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
+      //double f = rand01();
+      //sorted_struct[k] = -int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
     }
   }
   cout << "Inactive couplings before activation " << m << endl;
   quicksort(sorted_struct, tmp_idx, 0, int(tmp_idx.size()) - 1);
   int count_new_act = 0;
-  for (int k = 0; k < c; k++)
+  int new_act = c * m;
+  for (int k = 0; k < new_act; k++)
   {
     index = tmp_idx[int(tmp_idx.size()) - 1 - k];
     i = idx[index][0];
@@ -1707,7 +1709,7 @@ int Model::activate_compwise(int c, int iter, vector<vector<MYFLOAT>> &sm)
   // index = tmp_idx[int(tmp_idx.size()) - 1 - c];
   // fprintf(stdout, "Smallest DeltaL associated with added couplings is %.2e (i: %i j: %i a: %i b: %i) \n", sorted_struct[int(tmp_idx.size()) - 1 - c], idx[index][0], idx[index][1], idx[index][2], idx[index][3]);
   double nref = (L * (L - 1) * q * q) / 2;
-  printf("Activating %d couplings, %d new elements\n", c, count_new_act);
+  printf("Activating %d couplings, %d new elements\n", new_act, count_new_act);
   model_sp -= count_new_act / nref;
   cout << "Sparsity after activation is " << scientific << setprecision(3) << model_sp << endl;
   return 0;

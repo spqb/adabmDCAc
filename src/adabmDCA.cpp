@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   srand(myseed);
   cout << "Output files in " << params.outputfolder << " folder" << endl;
   if (mkdir(params.outputfolder, 0777) == -1)
-    cerr << "Is the folder " << params.outputfolder << " already present?" << endl;
+    cout << "Folder " << params.outputfolder << " already present" << endl;
   else
     cout << "Directory created" << endl;
   fflush(stdout);
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
       int aux = ceil(model.n_active() * params.drate);
       model.decimate_compwise(aux, iter);
     }
-    if (params.sparsity && model.model_sp > params.sparsity && (iter % params.gsteps == 0 || iter == 0))
+    if (params.gsteps && (iter % params.gsteps == 0 || iter == 0))
     {
       model.activate_compwise(params.nactive, iter, data.sm);
     }

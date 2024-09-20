@@ -75,8 +75,8 @@ Params::Params()
 	Twait = 0;
 	Twait_last = 1;
 	maxiter = 2000;
-	gsteps = 10;
-	nactive = 100;
+	gsteps = 0;
+	nactive = 0.001;
 	drate = 0.01;
 	restore_flag = false;
 }
@@ -241,7 +241,7 @@ int Params::read_params(int &argc, char **argv)
 			file_3points = optarg;
 			break;
 		case 'U':
-			nactive = atoi(optarg);
+			nactive = atof(optarg);
 			break;
 		case 'V':
 			drate = atof(optarg);
@@ -338,7 +338,7 @@ int Params::read_params(int &argc, char **argv)
 			cout << "-Z : (flag) Set all zero couplings to inactive" << endl;
 			cout << "-x : (number) Required sparsity (if not required, dense Potts is used) using pruning/activation of the couplings." << endl;
 			cout << "     For the pruning procedure, a sDKL-based method is assumed" << endl;
-			cout << "-U : (int) Activate X elements among the inactive/active couplings, default:" << nactive << endl;
+			cout << "-U : (float) Activate a fraction X elements among the inactive couplings, default:" << nactive << endl;
 			cout << "-V : (float) Decimate a fraction X of the active couplings, default: " << drate << endl;
 			cout << "-X : (int) Activate every X gradient steps, default: " << gsteps << endl;
 			cout << endl;
@@ -439,8 +439,10 @@ void Params::print_learning_strategy()
 			exit(1);
 		}
 		cout << "Required sparsity " << sparsity << endl;
-		cout << "Decimate when reaching Pearson " << conv << " or activate every " << gsteps << " steps of gradient update" << endl;
+		cout << "Decimate when reaching Pearson " << conv << endl; 
 	}
+	if (gsteps > 0)
+		cout << "Activate a fraction " << setprecision(3) << nactive << " of inactive couplings every " << gsteps << " gradient updates" << endl; 
 	if (regJ1 > 0)
 		cout << "L1 regularization on couplings: lambda " << regJ1 << endl;
 	if (regJ2 > 0)

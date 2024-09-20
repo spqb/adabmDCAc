@@ -113,7 +113,7 @@ public:
   double pearson(vector<vector<MYFLOAT>> &cov, bool nodec);
   int n_total();
   int n_active();
-  int activate_compwise(int c, int iter, vector<vector<MYFLOAT>> &sm);
+  int activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm);
   int print_natural_samples(char *filename, vector<vector<unsigned char>> &msa);
   void get_Teq(char *filename);
   double compute_twins_overlap(vector<vector<vector<unsigned char>>> &seq);
