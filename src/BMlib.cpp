@@ -76,7 +76,7 @@ Params::Params()
 	Twait_last = 1;
 	maxiter = 2000;
 	gsteps = 0;
-	nactive = 0.002;
+	nactive = 0.001;
 	drate = 0.01;
 	restore_flag = false;
 }

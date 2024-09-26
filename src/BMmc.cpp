@@ -554,7 +554,7 @@ int Model::print_model(char *filename)
 {
   ofstream fp;
   fp.open(filename);
-  vector<char> abc = alphabet(params->ctype); 
+  vector<char> abc = alphabet(params->ctype);
   if (strcmp(params->ctype, "i") == 0)
   {
     for (int i = 0; i < L; i++)
@@ -1100,8 +1100,8 @@ void Model::print_samples(char *filename)
     for (int m = 0; m < int(mstat->synth_msa[t].size()); m++)
     {
       x = mstat->synth_msa[t][m];
-      //fprintf(fp, ">THREAD%d_CHAIN%d_SAMPLE%d DCAscore %lf\n", t,
-      //        m / params->Nmc_config, m % params->Nmc_config, prof_energy(x) + DCA_energy(x));
+      // fprintf(fp, ">THREAD%d_CHAIN%d_SAMPLE%d DCAscore %lf\n", t,
+      //         m / params->Nmc_config, m % params->Nmc_config, prof_energy(x) + DCA_energy(x));
       fprintf(fp, ">sequence %d | DCAenergy %lf\n", m, prof_energy(x) + DCA_energy(x));
       for (int i = 0; i < L; i++)
         fprintf(fp, "%c", abc[x[i]]);
@@ -1656,7 +1656,7 @@ int Model::activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm)
   int i, j, a, b, index, m = 0;
   double smalln = min(1e-30, params->pseudocount * 0.03);
   double mindl = 1e50;
-  double pc = 0.01;
+  //double pc = 0.01;
   for (int k = 0; k < int(tmp_idx.size()); k++)
   {
     tmp_idx[k] = k;
@@ -1664,27 +1664,20 @@ int Model::activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm)
     j = idx[k][1];
     a = idx[k][2];
     b = idx[k][3];
+    double f_d = sm[i * q + a][j * q + b];          //(1 - pc) * sm[i * q + a][j * q + b] + pc / (q * q);
+    //double f_m = mstat->sm_s[i * q + a][j * q + b]; 
+    double f_m = (1 -params->pseudocount) * mstat->sm_s[i * q + a][j * q + b] + params->pseudocount / (q * q);
+    sorted_struct[k] = f_d * log(f_d / f_m) + (1 - f_d) * log((1 - f_d) / (1 - f_m));
+    sorted_struct[k] += rand01() * smalln;
+    mindl = min(mindl, sorted_struct[k]);
     if (decJ[i * q + a][j * q + b] < 0.5) // inactive
-    {
       m += 1;
-      double f_d = (1 - pc) * sm[i * q + a][j * q + b] + pc / (q * q);
-      double f_m = (1 - pc) * mstat->sm_s[i * q + a][j * q + b] + pc / (q * q);
-      sorted_struct[k] = f_d * log(f_d / f_m) + (1 - f_d) * log((1 - f_d) / (1 - f_m));
-      sorted_struct[k] += rand01() * smalln;
-      mindl = min(mindl, sorted_struct[k]);
-      // fprintf(fileout, "J %i %i %i %i %.2e %f %f\n", i, j, a, b, sorted_struct[k], J[i*q+a][j*q+b], sm_s[i*q+a][j*q+b]);
-    }
-    else 
-    {
-      
-      double f_d = (1 - pc) * sm[i * q + a][j * q + b] + pc / (q * q);
-      double f_m = (1 - pc) * mstat->sm_s[i * q + a][j * q + b] + pc / (q * q);
-      sorted_struct[k] = f_d * log(f_d / f_m) + (1 - f_d) * log((1 - f_d) / (1 - f_m));
-      sorted_struct[k] += rand01() * smalln;
-      mindl = min(mindl, sorted_struct[k]);
-      //double f = rand01();
-      //sorted_struct[k] = -int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
-    }
+    //printf("J %i %i %i %i %.2e %f %f %f\n", i, j, a, b, sorted_struct[k], J[i*q+a][j*q+b], mstat->sm_s[i*q+a][j*q+b], sm[i*q+a][j*q+b]);
+    // else
+    //{
+    // double f = rand01();
+    // sorted_struct[k] = -int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
+    //}
   }
   cout << "Inactive couplings before activation " << m << endl;
   quicksort(sorted_struct, tmp_idx, 0, int(tmp_idx.size()) - 1);
