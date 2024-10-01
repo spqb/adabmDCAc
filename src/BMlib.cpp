@@ -21,7 +21,6 @@ typedef double MYFLOAT;
 
 Params::Params()
 {
-
 	file_msa = 0;
 	file_msa_e = 0;
 	file_w = 0;
@@ -31,7 +30,7 @@ Params::Params()
 	initst = 0.;
 	init = 'R';
 	outputfolder = (char *)"output";
-	label = (char *)"nolabel";
+	label = (char *)"";
 	ctype = (char *)"a";
 	file_3points = 0;
 	file_cc = 0;
@@ -72,7 +71,7 @@ Params::Params()
 	Teq = 10;
 	Nmc_starts = 10000;
 	Nmc_config = 1;
-	Twait = 0;
+	Twait = 1;
 	Twait_last = 1;
 	maxiter = 2000;
 	gsteps = 0;
@@ -125,12 +124,12 @@ int Params::read_params(int &argc, char **argv)
 			maxiter = atoi(optarg);
 			if (maxiter == 0)
 			{
-				//nprinteq = true;
+				// nprinteq = true;
 				get_abc = true;
 			}
 			break;
 		case 'k':
-			label = optarg;
+			label = optarg + '_';
 			break;
 		case 'l':
 			w_th = atof(optarg);
@@ -369,13 +368,13 @@ int Params::read_params(int &argc, char **argv)
 	if (restore_flag)
 	{
 		char filename[1000];
-		sprintf(filename, "%s/%s_params.dat", outputfolder, label);
+		sprintf(filename, "%s/%sparams.dat", outputfolder, label);
 		file_params = (char *)malloc(strlen(filename) + 1);
 		strcpy(file_params, filename);
-		sprintf(filename, "%s/%s_weights.dat", outputfolder, label);
+		sprintf(filename, "%s/%sweights.dat", outputfolder, label);
 		file_w = (char *)malloc(strlen(filename) + 1);
 		strcpy(file_w, filename);
-		sprintf(filename, "%s/%s_chains.dat", outputfolder, label);
+		sprintf(filename, "%s/%schains.dat", outputfolder, label);
 		file_last_chain = (char *)malloc(strlen(filename) + 1);
 		strcpy(file_last_chain, filename);
 	}
@@ -385,7 +384,7 @@ int Params::read_params(int &argc, char **argv)
 
 void Params::print_learning_strategy()
 {
-	cout << "****** Initializing model ******" << endl;
+	fprintf(filel, "****** Initializing model ******\n");
 	if (Nmc_starts % 2 == 1 || Nmc_starts <= 0)
 	{
 		cerr << "You need an even number of MC chains to check equilibration" << endl;
@@ -393,62 +392,62 @@ void Params::print_learning_strategy()
 	}
 	if (Metropolis)
 	{
-		cout << "Performing Metropolis-Hastings MC" << endl;
+		fprintf(filel, "Performing Metropolis-Hastings MC\n");
 	}
 	else if (Gibbs)
 	{
-		cout << "Performing Gibbs sampling" << endl;
+		fprintf(filel, "Performing Gibbs sampling\n");
 	}
 	if (adapt)
 	{
-		cout << "Adaptive sampling time. Initial sampling time: " << Twait << " initial equilibration time: " << Teq << endl;
+		fprintf(filel, "Adaptive sampling time. Initial sampling time: %d initial equilibration time: %d\n", Twait, Teq);
 	}
 	else
 	{
-		cout << "Fixed sampling time: " << Twait << " fixed equilibration time: " << Teq << endl;
+		fprintf(filel, "Fixed sampling time: %d fixed equilibration time: %d\n", Twait, Teq);
 	}
-	cout << "Using " << Nmc_starts << " seeds and tot. number of points " << Nmc_starts * Nmc_config * num_threads << endl;
+	fprintf(filel, "Using %d seeds and tot. number of points %d\n", Nmc_starts, Nmc_starts * Nmc_config * num_threads);
 	if (restore_flag)
 	{
-		cout << "MC chains are initialized from restored file";
+		fprintf(filel, "MC chains are initialized from restored file");
 	}
 	else if (initdata)
 	{
-		cout << "MC chains are initialized using MSA sequences";
+		fprintf(filel, "MC chains are initialized using MSA sequences");
 	}
 	else
 	{
-		cout << "MC chains are randomly initialized";
+		fprintf(filel, "MC chains are randomly initialized");
 	}
 	if (persistent)
 	{
-		cout << " only at the beginning, and are then persistent" << endl;
+		fprintf(filel, " only at the beginning, and are then persistent\n");
 	}
 	else
 	{
 		if (restore_flag)
-			cout << " only at the beginning, and then they are randomly initialized" << endl;
+			fprintf(filel, " only at the beginning, and then they are randomly initialized\n");
 		else
-			cout << " at the beginning of each iteration" << endl;
+			fprintf(filel, " at the beginning of each iteration\n");
 	}
 	if (sparsity > 0.0)
 	{
 		if (regJ1 != 0.0 || regJ2 != 0.0)
 		{
-			cout << "Regularization is not compatible with sparsification because of gauge choice conflicts" << endl;
+			fprintf(filel, "Regularization is not compatible with sparsification because of gauge choice conflicts\n");
 			exit(1);
 		}
-		cout << "Required sparsity " << sparsity << endl;
-		cout << "Decimate when reaching Pearson " << conv << endl; 
+		fprintf(filel, "Required sparsity %.3lf\n", sparsity);
+		fprintf(filel, "Decimate when reaching Pearson %.3lf\n", conv);
 	}
 	if (gsteps > 0)
-		cout << "Activate a fraction " << setprecision(3) << nactive << " of inactive couplings every " << gsteps << " gradient updates" << endl; 
+		fprintf(filel, "Activate a fraction %.4lf of inactive couplings every %d gradient updates\n", nactive, gsteps);
 	if (regJ1 > 0)
-		cout << "L1 regularization on couplings: lambda " << regJ1 << endl;
+		fprintf(filel, "L1 regularization on couplings: lambda %.3lf\n", regJ1);
 	if (regJ2 > 0)
-		cout << "L2 regularization on couplings: lambda " << regJ2 << endl;
+		fprintf(filel, "L2 regularization on couplings: lambda %.3lf\n", regJ2);
 	if (pseudocount)
-		cout << "Using pseudo-count: " << pseudocount << endl;
+		fprintf(filel, "Using pseudo-count: %.2e\n", pseudocount);
 }
 
 void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum, char *ene, char *corr, char *score, char *first, char *sec, char *third, char *lchain, char *eqfile)
@@ -457,43 +456,43 @@ void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum,
 	{
 		if (overwrite)
 		{
-			sprintf(corr, "%s/%s_corr.dat", outputfolder, label);
-			sprintf(par, "%s/%s_params.dat", outputfolder, label);
-			sprintf(par_zsum, "%s/%s_params_zerosum.dat", outputfolder, label);
-			sprintf(ene, "%s/%s_samples.dat", outputfolder, label);
-			sprintf(score, "%s/%s_score.dat", outputfolder, label);
-			sprintf(first, "%s/%s_first_mom.dat", outputfolder, label);
-			sprintf(sec, "%s/%s_sec_mom.dat", outputfolder, label);
-			sprintf(third, "%s/%s_third_mom.dat", outputfolder, label);
-			sprintf(lchain, "%s/%s_chains.dat", outputfolder, label);
-			sprintf(eqfile, "%s/%s_seqid.dat", outputfolder, label);
+			sprintf(corr, "%s/%scorr.dat", outputfolder, label);
+			sprintf(par, "%s/%sparams.dat", outputfolder, label);
+			sprintf(par_zsum, "%s/%sparams_zerosum.dat", outputfolder, label);
+			sprintf(ene, "%s/%ssamples.dat", outputfolder, label);
+			sprintf(score, "%s/%sscore.dat", outputfolder, label);
+			sprintf(first, "%s/%sfirst_mom.dat", outputfolder, label);
+			sprintf(sec, "%s/%ssec_mom.dat", outputfolder, label);
+			sprintf(third, "%s/%sthird_mom.dat", outputfolder, label);
+			sprintf(lchain, "%s/%schains.dat", outputfolder, label);
+			sprintf(eqfile, "%s/%sseqid.dat", outputfolder, label);
 		}
 		else
 		{
-			sprintf(corr, "%s/%s_corr_%d.dat", outputfolder, label, iter);
-			sprintf(par, "%s/%s_params_%d.dat", outputfolder, label, iter);
-			sprintf(par_zsum, "%s/%s_arameters_zerosum_%d.dat", outputfolder, label, iter);
-			sprintf(ene, "%s/%s_samples_%d.dat", outputfolder, label, iter);
-			sprintf(score, "%s/%s_score_%d.dat", outputfolder, label, iter);
-			sprintf(first, "%s/%s_first_mom_%d.dat", outputfolder, label, iter);
-			sprintf(sec, "%s/%s_sec_mom_%d.dat", outputfolder, label, iter);
-			sprintf(third, "%s/%s_third_mom_%d.dat", outputfolder, label, iter);
-			sprintf(lchain, "%s/%s_chains_%d.dat", outputfolder, label, iter);
-			sprintf(eqfile, "%s/%s_seqid_%d.dat", outputfolder, label, iter);
+			sprintf(corr, "%s/%scorr_%d.dat", outputfolder, label, iter);
+			sprintf(par, "%s/%sparams_%d.dat", outputfolder, label, iter);
+			sprintf(par_zsum, "%s/%sarameters_zerosum_%d.dat", outputfolder, label, iter);
+			sprintf(ene, "%s/%ssamples_%d.dat", outputfolder, label, iter);
+			sprintf(score, "%s/%sscore_%d.dat", outputfolder, label, iter);
+			sprintf(first, "%s/%sfirst_mom_%d.dat", outputfolder, label, iter);
+			sprintf(sec, "%s/%ssec_mom_%d.dat", outputfolder, label, iter);
+			sprintf(third, "%s/%sthird_mom_%d.dat", outputfolder, label, iter);
+			sprintf(lchain, "%s/%schains_%d.dat", outputfolder, label, iter);
+			sprintf(eqfile, "%s/%sseqid_%d.dat", outputfolder, label, iter);
 		}
 	}
 	else
 	{
-		sprintf(corr, "%s/%s_corr.dat", outputfolder, label);
-		sprintf(par, "%s/%s_params.dat", outputfolder, label);
-		sprintf(par_zsum, "%s/%s_params_zerosum.dat", outputfolder, label);
-		sprintf(ene, "%s/%s_samples.dat", outputfolder, label);
-		sprintf(score, "%s/%s_score.dat", outputfolder, label);
-		sprintf(first, "%s/%s_first_mom.dat", outputfolder, label);
-		sprintf(sec, "%s/%s_sec_mom.dat", outputfolder, label);
-		sprintf(third, "%s/%s_third_mom.dat", outputfolder, label);
-		sprintf(lchain, "%s/%s_chains.dat", outputfolder, label);
-		sprintf(eqfile, "%s/%s_seqid.dat", outputfolder, label);
+		sprintf(corr, "%s/%scorr.dat", outputfolder, label);
+		sprintf(par, "%s/%sparams.dat", outputfolder, label);
+		sprintf(par_zsum, "%s/%sparams_zerosum.dat", outputfolder, label);
+		sprintf(ene, "%s/%ssamples.dat", outputfolder, label);
+		sprintf(score, "%s/%sscore.dat", outputfolder, label);
+		sprintf(first, "%s/%sfirst_mom.dat", outputfolder, label);
+		sprintf(sec, "%s/%ssec_mom.dat", outputfolder, label);
+		sprintf(third, "%s/%sthird_mom.dat", outputfolder, label);
+		sprintf(lchain, "%s/%schains.dat", outputfolder, label);
+		sprintf(eqfile, "%s/%sseqid.dat", outputfolder, label);
 	}
 }
 
@@ -501,9 +500,9 @@ Data_e::Data_e(Params *_params, int _q, int _L, double Meff) : params(_params), 
 {
 	if (params->file_msa_e)
 	{
-		cout << "****** Initializing data_energy structures ******" << endl;
+		fprintf(params->filel, "****** Initializing data_energy structures ******\n");
 		A = params->lambda_e / (1 - params->lambda_e) / Meff;
-		cout << "Running with lambda = " << params->lambda_e << " and A = " << A << endl;
+		fprintf(params->filel, "Running with lambda =  %.3lf and A = %.3lf\n", params->lambda_e, A);
 		read_msa();
 		compute_w();
 	}
@@ -513,7 +512,7 @@ void Data_e::compute_w()
 {
 	ofstream fw;
 	char file_w[1000];
-	sprintf(file_w, "%s/%s_weights_e.dat", params->outputfolder, params->label);
+	sprintf(file_w, "%s/%sweights_e.dat", params->outputfolder, params->label);
 	fw.open(file_w);
 	w.clear();
 	double den = 0;
@@ -534,7 +533,7 @@ void Data_e::read_msa()
 {
 	char filename[1000];
 	sprintf(filename, "%s.fasta", params->file_msa_e);
-	cout << "Reading MSA from " << filename << endl;
+	fprintf(params->filel, "Reading MSA from %s\n", filename);
 	FILE *filemsa;
 	char ch;
 	int readseq = 0, newseq = 0;
@@ -559,7 +558,7 @@ void Data_e::read_msa()
 			}
 			else if (L != int(auxseq.size()))
 			{
-				cout << "MSA reading error!" << endl;
+				cerr << "MSA reading error!" << endl;
 				exit(1);
 			}
 			if (int(auxseq.size()) > 0)
@@ -582,12 +581,11 @@ void Data_e::read_msa()
 	if (int(auxseq.size()) > 0)
 		msa.push_back(auxseq); // last sequence
 	M = int(msa.size());
-	cout << "Reading alignment completed." << endl
-		 << "M = " << M << " L = " << L << " q = " << q << endl;
+	fprintf(params->filel, "Reading alignment completed. M = %d L = %d q = %d\n", M, L, q);
 	fclose(filemsa);
 	/* read fitnesses */
 	sprintf(filename, "%s.fit", params->file_msa_e);
-	cout << "Reading fitnesses from " << filename << endl;
+	fprintf(params->filel, "Reading fitnesses from %s\n", filename);
 	if (!(filemsa = fopen(filename, "r")))
 	{
 		cerr << "I couldnt open " << filename << endl;
@@ -610,7 +608,7 @@ void Data_e::read_msa()
 		cerr << "MSA and fitnesses have different sizes!" << endl;
 		exit(1);
 	}
-	cout << "Reading alignment completed.\nM = " << M << " L = " << L << " q = " << q << endl;
+	fprintf(params->filel, "Reading alignment completed. M = %d L = %d q = %d\n", M, L, q);
 }
 
 void Data_e::set_tg_energy()
@@ -621,7 +619,7 @@ void Data_e::set_tg_energy()
 
 void Data_e::set_tg_energy_rank()
 {
-	cout << "Setting target energy to ranked (according to fitness) model energies" << endl;
+	fprintf(params->filel, "Setting target energy to ranked (according to fitness) model energies\n");
 	vector<int> idx(M);
 	vector<MYFLOAT> tmp(M);
 	for (int m = 0; m < M; m++)
@@ -640,7 +638,7 @@ void Data_e::set_tg_energy_rank()
 /* construct the target energies as the fitnesses */
 void Data_e::set_tg_energy_fitness()
 {
-	cout << "Setting target energy to minus input fitnesses" << endl;
+	fprintf(params->filel, "Setting target energy to minus input fitnesses\n");
 	tg_energy.clear();
 	for (int m = 0; m < M; m++)
 		tg_energy.push_back(-fitness[m]);
@@ -731,10 +729,10 @@ void Data_e::print_energy(char *filename)
 
 Data::Data(Params *_params) : params(_params)
 {
-	cout << "****** Initializing data structures ******" << endl;
+	fprintf(params->filel, "****** Initializing data structures ******\n");
 	if (params->get_abc)
 		read_alphabet();
-	q = print_alphabet(params->ctype);
+	q = print_alphabet(params->ctype, params->filel);
 	if (params->file_msa)
 	{
 		read_msa();
@@ -752,7 +750,7 @@ Data::Data(Params *_params) : params(_params)
 void Data::read_alphabet()
 {
 	char *filename = params->file_params;
-	cout << "Reading alphabet from parameter file " << params->file_params << endl;
+	fprintf(params->filel, "Reading alphabet from parameter file %s\n", params->file_params);
 	FILE *filepar;
 	if (!filename || !(filepar = fopen(filename, "r")))
 	{
@@ -790,7 +788,7 @@ void Data::read_alphabet()
 		}
 	}
 	L += gap;
-	cout << "L: " << L << " q: " << abc.size() << endl;
+	fprintf(params->filel, "L: %d  q: %ld\n", L, abc.size());
 	params->ctype = new char[abc.size() + 1]; // memory allocated
 	strcpy(params->ctype, abc.c_str());
 }
@@ -798,16 +796,17 @@ void Data::read_alphabet()
 void Data::read_msa()
 {
 	char *filename = params->file_msa;
-	cout << "Reading MSA from " << params->file_msa << endl;
+	fprintf(params->filel, "Reading MSA from %s\n", params->file_msa);
 	FILE *filemsa;
 	char ch;
-	int readseq = 0, newseq = 0;
+	int readseq = 0, newseq = 0, ignseq = 0;
 	if (!filename || !(filemsa = fopen(filename, "r")))
 	{
 		cerr << "I couldn't open " << filename << endl;
 		exit(EXIT_FAILURE);
 	}
 	vector<unsigned char> auxseq;
+	vector<unsigned char> seqname;
 	M = 0;
 	L = 0;
 	msa.clear();
@@ -817,17 +816,19 @@ void Data::read_msa()
 		{
 			newseq = 1;
 			readseq = 0;
-			if (L == 0 && int(auxseq.size()) > 0)
+			seqname.clear();
+			if (L == 0 && int(auxseq.size()) > 0 && !ignseq)
 			{
 				L = int(auxseq.size());
 			}
-			else if (L != int(auxseq.size()))
+			else if (L != int(auxseq.size()) && !ignseq)
 			{
-				cout << "MSA reading error!" << endl;
+				cerr << "MSA reading error!" << endl;
 				exit(1);
 			}
-			if (int(auxseq.size()) > 0)
+			if (int(auxseq.size()) > 0 && !ignseq)
 				msa.push_back(auxseq);
+			ignseq = 0;
 		}
 		else
 		{
@@ -839,15 +840,34 @@ void Data::read_msa()
 			}
 			else if (ch != '\n' && newseq == 0 && readseq == 1)
 			{
-				auxseq.push_back(convert_char(ch, params->ctype));
+				if (convert_char(ch, params->ctype) == (unsigned char)-1)
+				{
+					fprintf(stderr, "Ignoring sequence ");
+					for (int i = 0; i < int(seqname.size()); i++)
+						fprintf(stderr, "%c", seqname[i]);
+					fprintf(stderr, "\n");
+					ignseq = 1;
+					readseq = 0;
+				}
+				else
+					auxseq.push_back(convert_char(ch, params->ctype));
+			}
+			else if (ch != '\n' && newseq == 1 && readseq == 0)
+			{
+				seqname.push_back(ch);
 			}
 		}
 	}
 	if (int(auxseq.size()) > 0)
 		msa.push_back(auxseq); // last sequence
 	M = int(msa.size());
-	cout << "Reading alignment completed." << endl
-		 << "M = " << M << " L = " << L << " q = " << q << endl;
+	fprintf(params->filel, "Reading alignment completed. M = %d L = %d q = %d\n", M, L, q);
+
+	if (M == 0 || L == 0)
+	{
+		cerr << "MSA reading error!" << endl;
+		exit(1);
+	}
 	fclose(filemsa);
 }
 
@@ -859,11 +879,11 @@ void Data::compute_w()
 	char *label = params->label;
 	if (filename)
 	{
-		cout << "Reading weights from " << params->file_w << "...";
+		fprintf(params->filel, "Reading weights from %s ...", params->file_w);
 		FILE *filew;
 		if (!(filew = fopen(filename, "r")))
 		{
-			cerr << "File " << params->file_w << " not found" << endl;
+			cerr << "\nFile " << params->file_w << " not found" << endl;
 			exit(EXIT_FAILURE);
 		}
 		else
@@ -880,11 +900,11 @@ void Data::compute_w()
 	}
 	else
 	{
-		cout << "Computing weights...";
+		fprintf(params->filel, "Computing weights...");
 		fflush(stdout);
 		ofstream fw;
 		char file_w[1000];
-		sprintf(file_w, "%s/%s_weights.dat", params->outputfolder, label);
+		sprintf(file_w, "%s/%sweights.dat", params->outputfolder, label);
 		fw.open(file_w);
 		int m = 0, n = 0, d = 0, l = 0;
 		for (m = 0; m < M; m++)
@@ -914,8 +934,8 @@ void Data::compute_w()
 		}
 		fw.close();
 	}
-	cout << "done" << endl;
-	fflush(stdout);
+	fprintf(params->filel, "done\n");
+	fflush(params->filel);
 }
 
 void Data::alloc_structures()
@@ -930,7 +950,7 @@ void Data::alloc_structures()
 
 void Data::compute_empirical_statistics()
 {
-	cout << "Computing empirical statistics...";
+	fprintf(params->filel, "Computing empirical statistics...");
 	Meff = 0.0;
 	for (int m = 0; m < M; m++)
 	{
@@ -1002,9 +1022,7 @@ void Data::compute_empirical_statistics()
 			cov[i][j] = sm[i][j] - fm[i] * fm[j];
 		}
 	}
-	cout.setf(ios::fixed, ios::floatfield);
-	cout.precision(2);
-	cout << "Meff: " << Meff << endl;
+	fprintf(params->filel, "Meff: %.3lf\n", Meff);
 }
 
 void Data::read_freq()
@@ -1021,7 +1039,7 @@ void Data::read_freq()
 	}
 	else
 	{
-		cout << "Reading frequencies from " << params->file_freq << endl;
+		fprintf(params->filel, "Reading frequencies from %s\n", params->file_freq);
 	}
 	L = 0;
 	while (!feof(filefreq) && fgets(tmp, 1024, filefreq) && sscanf(tmp, "%c ", &t) == 1)
@@ -1035,7 +1053,7 @@ void Data::read_freq()
 			break;
 		}
 	}
-	cout << "L = " << L << " M = " << M << " q = " << q << " alphabet = " << params->ctype << endl;
+	fprintf(params->filel, "L = %d M = %d q = %d alphabet = %s\n", L, M, q, params->ctype);
 	alloc_structures();
 	rewind(filefreq);
 	while (!feof(filefreq) && fgets(tmp, 1024, filefreq) && sscanf(tmp, "%c ", &t) == 1)
@@ -1062,6 +1080,8 @@ void Data::read_freq()
 	for (i = 0; i < q * L; i++)
 		for (j = 0; j < q * L; j++)
 			cov[i][j] = sm[i][j] - fm[i] * fm[j];
+
+	fflush(params->filel);
 }
 
 /******************** METHODS FOR 3RD ORDER STATISTICS ***********************************************************/
@@ -1070,7 +1090,7 @@ void Data::load_third_order_indices()
 {
 	if (params->file_3points)
 	{
-		cout << "Reading three points correlations indices..." << endl;
+		fprintf(params->filel, "Reading three points correlations indices...\n");
 		FILE *file3;
 		if (!(file3 = fopen(params->file_3points, "r")))
 		{
@@ -1114,7 +1134,7 @@ void Data::load_third_order_indices()
 					}
 				}
 			}
-			cout << "Number of indices " << (int)tm_index.size() << endl;
+			fprintf(params->filel, "Number of indices %d\n", (int)tm_index.size());
 			// compute 3rd order moments of msa, slow!
 			for (int ind = 0; ind < int(tm_index.size()); ind++)
 			{
@@ -1143,8 +1163,9 @@ void Data::load_third_order_indices()
 	}
 	else
 	{
-		cout << "No three-points correlations indices specified" << endl;
+		fprintf(params->filel, "No three-points correlations indices specified\n");
 	}
+	fflush(params->filel);
 }
 
 /******************** METHODS FOR OUTPUT ***********************************************************/

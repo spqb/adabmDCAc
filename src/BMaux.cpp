@@ -90,9 +90,9 @@ int convert_char_amino(char a)
 	case 'A':
 		i = 1;
 		break;
-	case 'B':
-		i = 0;
-		break;
+	//case 'B':
+	//	i = 0;
+	//	break;
 	case 'C':
 		i = 2;
 		break;
@@ -114,9 +114,9 @@ int convert_char_amino(char a)
 	case 'I':
 		i = 8;
 		break;
-	case 'J':
-		i = 0;
-		break;
+	//case 'J':
+	//	i = 0;
+	//	break;
 	case 'K':
 		i = 9;
 		break;
@@ -129,9 +129,9 @@ int convert_char_amino(char a)
 	case 'N':
 		i = 12;
 		break;
-	case 'O':
-		i = 0;
-		break;
+	//case 'O':
+	//	i = 0;
+	//	break;
 	case 'P':
 		i = 13;
 		break;
@@ -147,27 +147,28 @@ int convert_char_amino(char a)
 	case 'T':
 		i = 17;
 		break;
-	case 'U':
-		i = 0;
-		break;
+	//case 'U':
+	//	i = 0;
+	//	break;
 	case 'V':
 		i = 18;
 		break;
 	case 'W':
 		i = 19;
 		break;
-	case 'X':
-		i = 0;
-		break;
+	//case 'X':
+	//	i = 0;
+	//	break;
 	case 'Y':
 		i = 20;
 		break;
-	case 'Z':
-		i = 0;
-		break;
+	//case 'Z':
+	//	i = 0;
+	//	break;
 	default:
-		cerr << a << "not recognized" << endl;
-		return (EXIT_FAILURE);
+		cerr << a << " not recognized" << endl;
+		i = -1;
+		break;
 	}
 	return (unsigned char)i;
 }
@@ -196,8 +197,8 @@ int convert_char_nbase(char a)
 		i = 4;
 		break;
 	default:
-		cerr << a << "not recognized" << endl;
-		i = 0;
+		cerr << a << " not recognized" << endl;
+		i = -1;
 		break;
 	}
 	return (unsigned char)i;
@@ -257,7 +258,7 @@ int convert_char_epi(char a)
 		i = 15;
 		break;
 	default:
-		cerr << a << "not recognized, assuming '-'" << endl;
+		cerr << a << " not recognized, assuming '-'" << endl;
 		i = 0;
 		break;
 		// return(EXIT_FAILURE);
@@ -289,8 +290,10 @@ int convert_char_ising(char a)
 		i = 0;
 		break;
 	default:
-		cerr << a << "not recognized" << endl;
-		return (EXIT_FAILURE);
+		cerr << a << " not recognized, assuming '-'" << endl;
+		//return (EXIT_FAILURE);
+		i = 0;
+		break;
 	}
 	return (unsigned char)i;
 }
@@ -327,12 +330,12 @@ int convert_char(char ch, char *ctype)
 	else
 	{
 		cerr << "Error in alphabet specification" << endl;
-		exit(EXIT_FAILURE);
+		return (EXIT_FAILURE);
 	}
 	return ris;
 }
 
-int print_alphabet(char *ctype)
+int print_alphabet(char *ctype, FILE *filel)
 {
 
 	int q = 0;
@@ -340,40 +343,40 @@ int print_alphabet(char *ctype)
 	abc = ctype;
 	if (!strcmp(ctype, "a"))
 	{
-		cout << "Using alphabet: -ACDEFGHIKLMNPQRSTVWY" << endl;
+		fprintf(filel, "Using alphabet: -ACDEFGHIKLMNPQRSTVWY\n");
 		q = 21;
 	}
 	else if (!strcmp(ctype, "n"))
 	{
-		cout << "Using alphabet: -ACGU" << endl;
+		fprintf(filel, "Using alphabet: -ACGU\n");
 		q = 5;
 	}
 	else if (!strcmp(ctype, "i"))
 	{
-		cout << "Using alphabet: {-1,1} spins. Input: AP (absent/present) or ud (down/up) or binary {0,1}" << endl;
+		fprintf(filel, "Using alphabet: {-1,1} spins. Input: AP (absent/present) or ud (down/up) or binary {0,1}\n");
 		q = 1;
 	}
 	else if (!strcmp(ctype, "e"))
 	{
-		cout << "Using alphabet: -AF5TtGEZhBbeRrq \n"
-			 << endl;
+		fprintf(filel,"Using alphabet: -AF5TtGEZhBbeRrq\n");
 		q = 16;
 	}
 	else if (isdigit(*ctype) && sscanf(ctype, "%d", &q) == 1)
 	{
-		cout << "Using alphabet: Potts with q = " << q << endl;
+		fprintf(filel, "Using alphabet: Potts with q = %d\n", q);
 	}
 	else if (abc.length() > 1)
 	{
-		cout << "Using alphabet: " << abc << endl;
+		fprintf(filel, "Using alphabet: %s\n ", abc.c_str());
 		q = abc.length();
 	}
 	else
 	{
-		cerr << "Use 'a' for amino-acids, 'n' for nitrogenous bases or 'i' for Ising-like variables" << endl;
+		cerr << "Use 'a' for amino-acids, 'n' for nitrogenous bases, 'i' for Ising-like variables or a <string> for ad-hoc alphabet\n" << endl;
 		return EXIT_FAILURE;
 	}
 	return q;
+	fflush(filel);
 }
 
 vector<char> alphabet(char *ctype)
@@ -419,6 +422,7 @@ vector<char> alphabet(char *ctype)
 		cerr << "Error in alphabet specification" << endl;
 		cerr << "Use 'a' for amino-acids or 'n' for nitrogenous bases" << endl;
 		cerr << "Use 'i' for ising variables" << endl;
+		cerr << "Use '-b string' for ad-hoc alphabet" << endl;
 		exit(EXIT_FAILURE);
 	}
 	return ris;

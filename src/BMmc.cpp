@@ -216,7 +216,8 @@ int Model::remove_gauge_freedom(vector<vector<MYFLOAT>> &cov)
       }
     }
   }
-  cout << "Gauge fixing: " << neff << " couplings have been removed" << endl;
+  fprintf(params->filel, "Gauge fixing: %d couplings have been removed", neff);
+  fflush(params->filel);
   return 0;
 }
 
@@ -235,7 +236,7 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
   }
   if (params->file_params)
   {
-    cout << "Reading input parameters from " << params->file_params << " with betaJ = " << params->betaJ << " and betaH = " << params->betaH << endl;
+    fprintf(params->filel, "Reading input parameters from %s with betaJ = %f and betaH = %f\n", params->file_params, params->betaJ, params->betaH);
     FILE *filep;
     if (!(filep = fopen(params->file_params, "r")))
     {
@@ -356,7 +357,7 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
     }
     double nref = (L * (L - 1) * q * q) / 2;
     model_sp = 1. - n / nref;
-    cout << "Sparsity after initialization: " << model_sp << endl;
+    fprintf(params->filel, "Sparsity after initialization: %f\n", model_sp);
   }
   else
   {
@@ -372,12 +373,10 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
     switch (params->init)
     {
     case 'R':
-      cout << "Zero-parameters initialization...done" << endl;
+      fprintf(params->filel, "Zero-parameters initialization...done\n");
       break;
     case 'I':
-      cout.unsetf(ios::scientific);
-      cout << setprecision(2);
-      cout << "Initializing H parameters using independent sites approximation, J = " << params->initst << " times covariance matrix...";
+      fprintf(params->filel, "Initializing H parameters using independent sites approximation, J = %f times covariance matrix...\n", params->initst);
       double ent = 0;
       for (int i = 0; i < L; i++)
       {
@@ -403,9 +402,7 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
           J[j][i] = params->initst * cov[i][j];
         }
       }
-      cout.setf(ios::fixed, ios::floatfield);
-      cout.precision(2);
-      cout << "with Sprof = " << ent << " - done" << endl;
+      fprintf(params->filel, "with Sprof = %f - done", ent);
     }
   }
   return 0;
@@ -418,17 +415,17 @@ void Model::initial_decimation(vector<vector<MYFLOAT>> &cov)
   {
     if (params->dgap)
     {
-      cout << "Using DGap model" << endl;
+      fprintf(params->filel, "Using DGap model\n");
       n = (L * (L - 1) * (q - 1) * (q - 1)) / 2;
     }
     else if (params->gapnn)
     {
-      cout << "Using GapNN model" << endl;
+      fprintf(params->filel, "Using GapNN model\n");
       n = (L * (L - 1) * (q - 1) * (q - 1)) / 2 + L - 1;
     }
     else if (params->phmm)
     {
-      cout << "Using Hmmer-like model" << endl;
+      fprintf(params->filel, "Using Hmmer-like model\n");;
       n = L - 1;
     }
     else if (params->rmgauge)
@@ -438,7 +435,7 @@ void Model::initial_decimation(vector<vector<MYFLOAT>> &cov)
     }
     else
     {
-      cout << "Using full Potts model" << endl;
+      fprintf(params->filel, "Using full Potts model\n");
       n = (L * (L - 1) * q * q) / 2;
     }
     for (int i = 0; i < L; i++)
@@ -484,7 +481,7 @@ void Model::initial_decimation(vector<vector<MYFLOAT>> &cov)
     }
     if (params->rmgauge)
     {
-      cout << "Using Potts model with Gauge fixing via cc-decimation" << endl;
+      fprintf(params->filel, "Using Potts model with Gauge fixing via cc-decimation\n");
       n = (L * (L - 1) * (q - 1) * (q - 1)) / 2;
       remove_gauge_freedom(cov);
     }
@@ -505,7 +502,7 @@ void Model::initial_decimation(vector<vector<MYFLOAT>> &cov)
   }
   else
   {
-    cout << "Reading interaction graph from " << params->file_cc << "...";
+    fprintf(params->filel, "Reading interaction graph from %s ...", params->file_cc);
     fflush(stdout);
     FILE *filep;
     if (!(filep = fopen(params->file_cc, "r")))
@@ -542,12 +539,11 @@ void Model::initial_decimation(vector<vector<MYFLOAT>> &cov)
         }
       }
     }
-    cout << "done " << endl
-         << "Number of links " << n << endl;
+    fprintf(params->filel, "done. Number of links %d\n", n);
   }
   double nref = (L * (L - 1) * q * q) / 2;
   model_sp = 1. - n / nref;
-  cout << "Sparsity after initialization: " << model_sp << endl;
+  fprintf(params->filel, "Sparsity after initialization: %.2f\n", model_sp);
 }
 
 int Model::print_model(char *filename)
@@ -944,10 +940,8 @@ bool Model::sample_ising(vector<vector<unsigned char>> &msa)
 
   if (params->nprinteq)
   {
-    cout.unsetf(ios::scientific);
-    cout.setf(ios::fixed, ios::floatfield);
-    cout << setprecision(2);
-    cout << "Sampling info: q_ext: " << qext << " +- " << dqext << " q_int_1: " << qin1 << " +- " << dqin1 << " q_int_2: " << qin2 << " +- " << dqin2 << " Test_eq1: " << test1 << " Test_eq2: " << test2 << endl;
+    fprintf(params->filel, "Sampling info: q_ext: %.2lf +- %.2lf q_int_1: %.2lf +- %.2lf q_int_2: %.2lf +- %.2lf Test_eq1: %d Test_eq2: %d\n",
+                            qext, dqext, qin1, dqin1, qin2, dqin2, test1, test2);
   }
   return eqmc;
 }
@@ -1006,9 +1000,8 @@ bool Model::sample(vector<vector<unsigned char>> &msa)
 
   if (params->nprinteq)
   {
-    cout.unsetf(ios::scientific);
-    cout << setprecision(2);
-    cout << "Sampling info: q_ext: " << qext << " +- " << dqext << " q_int_1: " << qin1 << " +- " << dqin1 << " q_int_2: " << qin2 << " +- " << dqin2 << " Test_eq1: " << test1 << " Test_eq2: " << test2 << endl;
+    fprintf(params->filel, "Sampling info: q_ext: %.2lf +- %.2lf q_int_1: %.2lf +- %.2lf q_int_2: %.2lf +- %.2lf Test_eq1: %d Test_eq2: %d\n",
+                            qext, dqext, qin1, dqin1, qin2, dqin2, test1, test2);
   }
   return eqmc;
 }
@@ -1348,8 +1341,6 @@ double Model::pearson(vector<vector<MYFLOAT>> &cov, bool nodec = false)
   double std_cov_s = sqrt(mean_y2 - mean_cov_s * mean_cov_s);
   double std_cov = sqrt(mean_x2 - mean_cov * mean_cov);
   double rho = covxy / (std_cov_s * std_cov);
-  cout.unsetf(ios::scientific);
-  cout << setprecision(1);
   return rho;
 }
 
@@ -1489,7 +1480,7 @@ double Model::update_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &sm
       fill(GJ.begin(), GJ.end(), Gh);
       counter = 0;
     }
-    cout << "FIRE step - acc: " << acc << " alpha: " << alpha << " counter: " << counter << " P: " << P / modF / modv << endl;
+    //cout << "FIRE step - acc: " << acc << " alpha: " << alpha << " counter: " << counter << " P: " << P / modF / modv << endl;
     return acc * params->lrateh;
   }
 }
@@ -1549,7 +1540,7 @@ int Model::decimate_compwise(int c, int iter)
   int i, j, a, b, index, m = 0;
   double smalln = min(1e-30, params->pseudocount * 0.03);
   double maxsdkl = -1e50;
-  cout << "Decimating " << c << " couplings" << endl;
+  fprintf(params->filel, "Decimating %d couplings\n", c);
   for (int k = 0; k < int(tmp_idx.size()); k++)
   {
     tmp_idx[k] = k;
@@ -1574,7 +1565,7 @@ int Model::decimate_compwise(int c, int iter)
       sorted_struct[k] = int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
     }
   }
-  cout << "Active couplings before decimation " << m << endl;
+  fprintf(params->filel, "Active couplings before decimation %d\n", m);
   quicksort(sorted_struct, tmp_idx, 0, int(tmp_idx.size()) - 1);
   for (int k = 0; k < c; k++)
   {
@@ -1604,7 +1595,7 @@ int Model::decimate_ising(int c, int iter)
   double num, den;
   double smalln = min(1e-30, params->pseudocount * 0.03);
   double maxsdkl = -1e50;
-  cout << "Decimating " << c << " couplings" << endl;
+  fprintf(params->filel, "Decimating %d couplings\n", c);
   for (int k = 0; k < int(tmp_idx.size()); k++)
   {
     tmp_idx[k] = k;
@@ -1629,7 +1620,7 @@ int Model::decimate_ising(int c, int iter)
       sorted_struct[k] = int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
     }
   }
-  cout << "Non-zeros parameters before decimation " << m << endl;
+  fprintf(params->filel, "Non-zeros parameters before decimation %d\n", m);
   quicksort(sorted_struct, tmp_idx, 0, int(tmp_idx.size()) - 1);
   for (int k = 0; k < c; k++)
   {
@@ -1644,10 +1635,11 @@ int Model::decimate_ising(int c, int iter)
     decJ[j][i] = 0;
   }
   index = tmp_idx[c];
-  fprintf(stdout, "Smallest sDKL associated with removed couplings is %.2e (i: %i j: %i)\n", sorted_struct[c], idx[index][0], idx[index][1]);
+  fprintf(params->filel, "Smallest sDKL associated with removed couplings is %.2e (i: %i j: %i)\n", sorted_struct[c], idx[index][0], idx[index][1]);
   double nref = (L * (L - 1)) / 2;
   model_sp += c / nref;
-  cout << "Sparsity after decimation is " << scientific << setprecision(3) << model_sp << endl;
+  fprintf(params->filel, "Sparsity after decimation is %.3lf\n", model_sp);
+  fflush(params->filel);
   return 0;
 }
 
@@ -1679,7 +1671,7 @@ int Model::activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm)
     // sorted_struct[k] = -int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
     //}
   }
-  cout << "Inactive couplings before activation " << m << endl;
+  fprintf(params->filel, "Inactive couplings before activation %d\n", m);
   quicksort(sorted_struct, tmp_idx, 0, int(tmp_idx.size()) - 1);
   int count_new_act = 0;
   int new_act = c * m;
@@ -1702,9 +1694,10 @@ int Model::activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm)
   // index = tmp_idx[int(tmp_idx.size()) - 1 - c];
   // fprintf(stdout, "Smallest DeltaL associated with added couplings is %.2e (i: %i j: %i a: %i b: %i) \n", sorted_struct[int(tmp_idx.size()) - 1 - c], idx[index][0], idx[index][1], idx[index][2], idx[index][3]);
   double nref = (L * (L - 1) * q * q) / 2;
-  printf("Activating %d couplings, %d new elements\n", new_act, count_new_act);
+  fprintf(params->filel, "Activating %d couplings, %d new elements\n", new_act, count_new_act);
   model_sp -= count_new_act / nref;
-  cout << "Sparsity after activation is " << scientific << setprecision(3) << model_sp << endl;
+  fprintf(params->filel, "Sparsity after activation is %.2lf\n", model_sp);
+  fflush(params->filel);
   return 0;
 }
 
@@ -1805,6 +1798,7 @@ void Model::get_Teq(char *filename)
     else
       params->Teq++;
   }
-  printf("Estimated number of sweeps: %d\n", params->Teq);
+  fprintf(params->filel, "Estimated number of sweeps: %d\n", params->Teq);
   fclose(fp);
+  fflush(params->filel);
 }

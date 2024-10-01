@@ -35,7 +35,7 @@ int convert_char_epi(char a);
 int convert_char_ising(char a);
 int convert_char_potts(char a);
 int convert_char(char ch, char *ctype);
-int print_alphabet(char *ctype);
+int print_alphabet(char *ctype, FILE *filel);
 vector<char> alphabet(char *ctype);
 
 /* quicksort from small to large */

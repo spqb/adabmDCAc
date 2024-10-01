@@ -33,24 +33,27 @@ int main(int argc, char **argv)
 
   cout << setprecision(1);
   /* START INITIALIZATION */
-  cout << "****** Boltzmann machine for DCA model ******" << endl;
   char hostname[HOST_NAME_MAX];
   char username[LOGIN_NAME_MAX];
   gethostname(hostname, HOST_NAME_MAX);
   getlogin_r(username, LOGIN_NAME_MAX);
-  cout << "Running from user " << username << " on host " << hostname << endl;
+  char logfile[1000];
   Params params;
   params.read_params(argc, argv);
-  long myseed = params.seed ? params.seed : time(NULL);
-  srand(myseed);
+  sprintf(logfile, "%s/%sadabmDCA.log", params.outputfolder, params.label);
+  cout << "****** Boltzmann machine for DCA model ******" << endl;
   cout << "Output files in " << params.outputfolder << " folder" << endl;
   if (mkdir(params.outputfolder, 0777) == -1)
     cout << "Folder " << params.outputfolder << " already present" << endl;
   else
     cout << "Directory created" << endl;
   fflush(stdout);
-
-  cout << "Seed of random number generator: " << myseed << endl;
+  if (!(params.filel = fopen(logfile, "a")))
+    cerr << "Not able to open log-file\n" << endl; 
+  fprintf(params.filel, "Running from user %s on host %s\n", username, hostname);
+  long myseed = params.seed ? params.seed : time(NULL);
+  srand(myseed);
+  fprintf(params.filel, "Seed of the random number generator: %ld\n", myseed);
   Data data(&params);
   Stats mstat;
   params.print_learning_strategy();
@@ -64,14 +67,14 @@ int main(int argc, char **argv)
   {
     if (data.L != data_e.L)
     {
-      cout << "Error: the two alignments have different length" << endl;
+      fprintf(params.filel, "Error: the two alignments have different length");
       exit(EXIT_FAILURE);
     }
     data_e.energy = model.energy(data_e.msa);
     data_e.set_tg_energy();
-    sprintf(ene_fit, "%s/%s_fitness_init.dat", params.outputfolder, params.label);
+    sprintf(ene_fit, "%s/%sfitness_init.dat", params.outputfolder, params.label);
     data_e.print_energy(ene_fit);
-    cout << "Spearman coefficient for energy fitting: " << spearman(data_e.fitness, data_e.energy) << endl;
+    fprintf(params.filel, "Spearman coefficient for energy fitting: %.3f\n ", spearman(data_e.fitness, data_e.energy));
   }
 
   data_e.compute_grad();
@@ -98,8 +101,8 @@ int main(int argc, char **argv)
   if (!conv)
   {
 
-    cout << "****** Starting learning loop ******" << endl;
-    cout << "Printing output every " << params.nprint << " iterations - summary every " << params.nprintfile << endl;
+    fprintf(params.filel, "****** Starting learning loop ******\n");
+    fprintf(params.filel, "Printing output every %d iterations - summary every %d\n", params.nprint, params.nprintfile); 
   }
   while (!conv)
   {
@@ -119,21 +122,22 @@ int main(int argc, char **argv)
         peae = pearson(data_e.tg_energy, data_e.energy);
         stde = data_e.destd();
       }
-      fprintf(stdout, "it: %d el_time: %d Teq: %d Twait: %d  ", iter, int(time(NULL) - in_time), params.Teq, params.Twait);
-      fprintf(stdout, "lrav: %.2e sp: %.2e ", lrav, model.model_sp);
-      fprintf(stdout, "cov_err: %.2e pears_act: %.2e pears_all: %.2e", errs.errnorm, model.pearson(data.cov, false), model.pearson(data.cov, true));
+      fprintf(params.filel, "it: %d el_time: %d Teq: %d Twait: %d  ", iter, int(time(NULL) - in_time), params.Teq, params.Twait);
+      fprintf(params.filel, "lrav: %.2e sp: %.2e ", lrav, model.model_sp);
+      fprintf(params.filel, "cov_err: %.2e pears_act: %.2e pears_all: %.2e", errs.errnorm, model.pearson(data.cov, false), model.pearson(data.cov, true));
       // cout << " merr_fm: " << setprecision(2) << errs.merrh << " merr_sm: " << setprecision(2) << errs.merrJ << " cov_err: " << setprecision(2) << errs.errnorm;
       //  cout << " averr_fm: " << errs.averrh << " averr_sm: " << errs.averrJ;
       if (params.file_msa_e)
-        fprintf(stdout, "sp_e: %.1e pears_e: %.1e stde: %.1e \n", spe, peae, stde);
+        fprintf(params.filel, "sp_e: %.1e pears_e: %.1e stde: %.1e \n", spe, peae, stde);
       // cout << " sp_e: " << spe << " pears_e: " << peae << " stde: " << stde << endl;
       else
         // cout << endl;
-        fprintf(stdout, "\n");
-      fflush(stdout);
+        fprintf(params.filel, "\n");
+      fflush(params.filel);
     }
     if (iter > 0 && (iter % params.nprintfile == 0))
     {
+      fflush(params.filel);
       params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain, eqfile);
       print_frobenius_norms(model.h, model.J, model.L, model.q, score, par_zsum);
       model.print_model(par);
@@ -192,16 +196,16 @@ int main(int argc, char **argv)
     if (model.pearson(data.cov, true) > params.conv && params.sparsity == 0)
     {
       conv = true;
-      cout << "Reached convergence of error, end of learning" << endl;
+      fprintf(params.filel, "Reached convergence of error, end of learning\n");
     }
     if (fabs(model.model_sp - params.sparsity) <= 0.01 * params.sparsity && params.sparsity > 0 && model.pearson(data.cov, true) > params.conv)
     {
       conv = true;
-      cout << "Reached convergence of error and desired sparsity, end of learning" << endl;
+      fprintf(params.filel, "Reached convergence of error and desired sparsity, end of learning\n");
     }
     if (iter >= params.maxiter)
     {
-      cout << "Reached maximum number of iterations, end of learning" << endl;
+      fprintf(params.filel, "Reached maximum number of iterations, end of learning\n");
       conv = true;
     }
     iter++;
@@ -209,13 +213,13 @@ int main(int argc, char **argv)
   /* END ITERATION LOOP */
 
   /* FINAL OPERATIONS */
-  cout << "****** Final sampling ******" << endl;
+  fprintf(params.filel, "****** Final sampling ******\n");
   fflush(stdout);
   params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain, eqfile);
   if (!params.maxiter)
   {
     model.get_Teq(eqfile);
-    fprintf(stdout, "Sampling may take a while...");
+    fprintf(params.filel, "Sampling may take a while...");
     fflush(stdout);
     if (strcmp(params.ctype, "i") == 0)
       model.sample_ising(data.msa);
@@ -228,8 +232,8 @@ int main(int argc, char **argv)
     else
       model.print_samples(ene);
 
-    fprintf(stdout, "done\n");
-    fflush(stdout);
+    fprintf(params.filel, "done\n");
+    fflush(params.filel);
   }
   else
   {
@@ -249,7 +253,7 @@ int main(int argc, char **argv)
       else
       {
         model.print_samples(ene);
-        sprintf(ene, "%s/%s_sample_natural_conv.dat", params.outputfolder, params.label);
+        sprintf(ene, "%s/%ssample_natural_conv.dat", params.outputfolder, params.label);
         model.print_natural_samples(ene, data.msa);
         if (params.file_msa_e)
         {
