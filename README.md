@@ -22,7 +22,7 @@ for a complete list of features.
 ./adabmDCA -f <MSA file> -a <output folder> -k <label> -m <nsave> -L
 ```
   - Output files will be saved every `nsave` iterations specified in the `-m` flag;
-  - The output folder is named after the `output folder` specified in the `-k` flag.
+  - The output folder is named after the `output folder` specified in the `-a` flag. Files will be labeled according to the argument of the flag `-k`.
   - Use `-w <file name>` for ad-hoc weights file (optional).
   - For RNA, set the flag `-b n`; for ad hoc alphabet set `-b <alphabet>` where `alphabet` is a string
 
@@ -50,7 +50,7 @@ Add the flag `--restore` to restart the training from the checkpoint saved in th
 ### Sampling
 Use
 ```
-./adabmDCA -p <params> -f <MSA> -i 0 -S -L
+./adabmDCA -p <params> -i 0 -S -L
 ```
 
 ## Output files
@@ -59,4 +59,3 @@ Use
 
 ## To be done
   - Compute DMS score, energies of a MSA
-  - Output/Input including alphabet in parameter file

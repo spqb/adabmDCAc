@@ -236,7 +236,7 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
   }
   if (params->file_params)
   {
-    fprintf(params->filel, "Reading input parameters from %s with betaJ = %f and betaH = %f\n", params->file_params, params->betaJ, params->betaH);
+    fprintf(params->filel, "Reading input parameters from %s with betaJ = %.3f and betaH = %.3f\n", params->file_params, params->betaJ, params->betaH);
     FILE *filep;
     if (!(filep = fopen(params->file_params, "r")))
     {
@@ -357,7 +357,7 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
     }
     double nref = (L * (L - 1) * q * q) / 2;
     model_sp = 1. - n / nref;
-    fprintf(params->filel, "Sparsity after initialization: %f\n", model_sp);
+    fprintf(params->filel, "Sparsity after initialization: %.3f\n", model_sp);
   }
   else
   {
@@ -425,7 +425,8 @@ void Model::initial_decimation(vector<vector<MYFLOAT>> &cov)
     }
     else if (params->phmm)
     {
-      fprintf(params->filel, "Using Hmmer-like model\n");;
+      fprintf(params->filel, "Using Hmmer-like model\n");
+      ;
       n = L - 1;
     }
     else if (params->rmgauge)
@@ -941,7 +942,7 @@ bool Model::sample_ising(vector<vector<unsigned char>> &msa)
   if (params->nprinteq)
   {
     fprintf(params->filel, "Sampling info: q_ext: %.2lf +- %.2lf q_int_1: %.2lf +- %.2lf q_int_2: %.2lf +- %.2lf Test_eq1: %d Test_eq2: %d\n",
-                            qext, dqext, qin1, dqin1, qin2, dqin2, test1, test2);
+            qext, dqext, qin1, dqin1, qin2, dqin2, test1, test2);
   }
   return eqmc;
 }
@@ -1001,7 +1002,7 @@ bool Model::sample(vector<vector<unsigned char>> &msa)
   if (params->nprinteq)
   {
     fprintf(params->filel, "Sampling info: q_ext: %.2lf +- %.2lf q_int_1: %.2lf +- %.2lf q_int_2: %.2lf +- %.2lf Test_eq1: %d Test_eq2: %d\n",
-                            qext, dqext, qin1, dqin1, qin2, dqin2, test1, test2);
+            qext, dqext, qin1, dqin1, qin2, dqin2, test1, test2);
   }
   return eqmc;
 }
@@ -1080,6 +1081,7 @@ void Model::print_last_chain(char *filename)
   }
   fclose(fp);
 }
+
 
 void Model::print_samples(char *filename)
 {
@@ -1480,7 +1482,7 @@ double Model::update_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &sm
       fill(GJ.begin(), GJ.end(), Gh);
       counter = 0;
     }
-    //cout << "FIRE step - acc: " << acc << " alpha: " << alpha << " counter: " << counter << " P: " << P / modF / modv << endl;
+    // cout << "FIRE step - acc: " << acc << " alpha: " << alpha << " counter: " << counter << " P: " << P / modF / modv << endl;
     return acc * params->lrateh;
   }
 }
@@ -1648,7 +1650,7 @@ int Model::activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm)
   int i, j, a, b, index, m = 0;
   double smalln = min(1e-30, params->pseudocount * 0.03);
   double mindl = 1e50;
-  //double pc = 0.01;
+  // double pc = 0.01;
   for (int k = 0; k < int(tmp_idx.size()); k++)
   {
     tmp_idx[k] = k;
@@ -1656,20 +1658,20 @@ int Model::activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm)
     j = idx[k][1];
     a = idx[k][2];
     b = idx[k][3];
-    double f_d = sm[i * q + a][j * q + b];          //(1 - pc) * sm[i * q + a][j * q + b] + pc / (q * q);
-    //double f_m = mstat->sm_s[i * q + a][j * q + b]; 
-    double f_m = (1 -params->pseudocount) * mstat->sm_s[i * q + a][j * q + b] + params->pseudocount / (q * q);
+    double f_d = sm[i * q + a][j * q + b]; //(1 - pc) * sm[i * q + a][j * q + b] + pc / (q * q);
+    // double f_m = mstat->sm_s[i * q + a][j * q + b];
+    double f_m = (1 - params->pseudocount) * mstat->sm_s[i * q + a][j * q + b] + params->pseudocount / (q * q);
     sorted_struct[k] = f_d * log(f_d / f_m) + (1 - f_d) * log((1 - f_d) / (1 - f_m));
     sorted_struct[k] += rand01() * smalln;
     mindl = min(mindl, sorted_struct[k]);
     if (decJ[i * q + a][j * q + b] < 0.5) // inactive
       m += 1;
-    //printf("J %i %i %i %i %.2e %f %f %f\n", i, j, a, b, sorted_struct[k], J[i*q+a][j*q+b], mstat->sm_s[i*q+a][j*q+b], sm[i*q+a][j*q+b]);
-    // else
+    // printf("J %i %i %i %i %.2e %f %f %f\n", i, j, a, b, sorted_struct[k], J[i*q+a][j*q+b], mstat->sm_s[i*q+a][j*q+b], sm[i*q+a][j*q+b]);
+    //  else
     //{
-    // double f = rand01();
-    // sorted_struct[k] = -int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
-    //}
+    //  double f = rand01();
+    //  sorted_struct[k] = -int(tmp_idx.size()) + f; // to be optimized: elements should be removed instead of putting large numbers
+    // }
   }
   fprintf(params->filel, "Inactive couplings before activation %d\n", m);
   quicksort(sorted_struct, tmp_idx, 0, int(tmp_idx.size()) - 1);
@@ -1703,7 +1705,7 @@ int Model::activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm)
 
 /******************** METHODS FOR FINAL SAMPLING ***********************************************************/
 
-double Model::compute_twins_overlap(vector<vector<vector<unsigned char>>> &seq)
+double Model::compute_t_halft_overlap(vector<vector<vector<unsigned char>>> &seq)
 {
   double av_ov = 0;
   int nc = 0;
@@ -1718,52 +1720,49 @@ double Model::compute_twins_overlap(vector<vector<vector<unsigned char>>> &seq)
   return av_ov / nc;
 }
 
-double Model::compute_ind_overlap(vector<vector<vector<unsigned char>>> &seq)
+double Model::compute_t_overlap(vector<vector<vector<unsigned char>>> &seq)
 {
   double av_ov_even = 0;
-  double av_ov_odd = 0;
   int nc = 0;
+  int even_idx[params->Nmc_starts / 2];
+
+  for (int s = 0; s < params->Nmc_starts / 2; s++)
+    even_idx[s] = 2 * s;
+
+  permute(even_idx, params->Nmc_starts / 2);
   for (int t = 0; t < params->num_threads; t++)
   {
     for (int s = 0; s < params->Nmc_starts / 2; s++)
     {
-      for (int d = s + 1; d < params->Nmc_starts / 2 - 1; d++)
-      {
-        av_ov_odd += overlap(seq[t][2 * s + 1], seq[t][2 * d + 1]) / (L * 1.0);
+        av_ov_even += overlap(seq[t][2 * s], seq[t][even_idx[s]]) / (L * 1.0);
         nc++;
-      }
-    }
-  }
-  av_ov_odd /= nc;
-  nc = 0;
-  for (int t = 0; t < params->num_threads; t++)
-  {
-    for (int s = 0; s < params->Nmc_starts / 2; s++)
-    {
-      for (int d = s + 1; d < params->Nmc_starts / 2; d++)
-      {
-        av_ov_even += overlap(seq[t][2 * s], seq[t][2 * d]) / (L * 1.0);
-        nc++;
-      }
     }
   }
   av_ov_even /= nc;
-  return (av_ov_even + av_ov_odd) * 0.5;
+  return av_ov_even;
 }
 
-void Model::get_Teq(char *filename)
+void Model::get_Teq(char *filename, vector<vector<unsigned char>> &msa)
 {
 
   FILE *fp = 0;
   fp = fopen(filename, "w");
+  char filedebug[1000];
   double ov_ind, ov_twins;
   vector<unsigned char> tmp(L);
   for (int t = 0; t < params->num_threads; t++)
   {
     for (int s = 0; s < params->Nmc_starts / 2; s++)
     {
+
+      int m = (int)rand() % int(msa.size());
       for (int i = 0; i < L; i++)
-        tmp[i] = (unsigned char)(int)rand() % q;
+      {
+        if (params->file_msa)
+          tmp[i] = msa[m][i];
+        else
+          tmp[i] = (unsigned char)(int)rand() % q;
+      }
       for (int i = 0; i < L; i++)
       {
         mstat->curr_state[t][2 * s][i] = tmp[i];
@@ -1771,34 +1770,70 @@ void Model::get_Teq(char *filename)
       }
     }
   }
-
+  fflush(stdout);
   bool eqmc = false;
-  ov_twins = compute_twins_overlap(mstat->curr_state);
-  ov_ind = compute_ind_overlap(mstat->curr_state);
+  ov_twins = compute_t_halft_overlap(mstat->curr_state);
+  ov_ind = compute_t_overlap(mstat->curr_state);
   fprintf(fp, "0 %lf %lf\n", ov_twins, ov_ind);
+  sprintf(filedebug, "samples_Teq0.fasta");
+  //print_curr_samples(filedebug); //debug
   params->Teq = 1;
+  int count = 0;
   while (!eqmc)
   {
+    // update even indices at every t
+    srand(params->Teq);
     for (int t = 0; t < params->num_threads; t++)
-    {
       for (int s = 0; s < params->Nmc_starts / 2; s++)
-      {
         MC_sweep(mstat->curr_state[t][2 * s]);
-        MC_sweep(mstat->curr_state[t][2 * s + 1]);
-      }
-    }
-    ov_twins = compute_twins_overlap(mstat->curr_state);
-    ov_ind = compute_ind_overlap(mstat->curr_state);
-    fprintf(fp, "%d %lf %lf\n", params->Teq, ov_twins, ov_ind);
-    if (ov_twins <= ov_ind)
+    // for t/2 times update odd indices
+    if (params->Teq % 2 == 0)
     {
-      eqmc = true;
-      params->Teq *= 10;
+      srand(params->Teq / 2);
+      for (int t = 0; t < params->num_threads; t++)
+        for (int s = 0; s < params->Nmc_starts / 2; s++)
+          MC_sweep(mstat->curr_state[t][2 * s + 1]);
+      ov_twins = compute_t_halft_overlap(mstat->curr_state);
+      ov_ind = compute_t_overlap(mstat->curr_state);
+      fprintf(fp, "%d %lf %lf %d\n", (int)(params->Teq * 0.5), ov_twins, ov_ind, count);
+      fflush(fp);
+      if (fabs(ov_twins-ov_ind) < 0.01) 
+        count++;
+      else
+        count = 0;
+      if(count > 10)
+        eqmc = true;
     }
-    else
-      params->Teq++;
+    sprintf(filedebug, "samples_Teq%d.fasta", params->Teq);
+    //print_curr_samples(filedebug); //debug
+    params->Teq++;
   }
+  params->Teq--;
+  params->Teq = (int)(params->Teq * 0.5);
   fprintf(params->filel, "Estimated number of sweeps: %d\n", params->Teq);
   fclose(fp);
   fflush(params->filel);
+  params->persistent = true; // start from last configurations
+}
+
+void Model::print_curr_samples(char *filename)
+{
+
+  FILE *fp = 0;
+  fp = fopen(filename, "w");
+  vector<unsigned char> x;
+  vector<char> abc = alphabet(params->ctype);
+  for (int t = 0; t < params->num_threads; t++)
+  {
+    for (int m = 0; m < int(mstat->curr_state[t].size()); m++)
+    {
+      x = mstat->curr_state[t][m];
+      fprintf(fp, ">sequence %d | DCAenergy %lf\n", m, prof_energy(x) + DCA_energy(x));
+      for (int i = 0; i < L; i++)
+        fprintf(fp, "%c", abc[x[i]]);
+      fprintf(fp, "\n");
+    }
+  }
+
+  fclose(fp);
 }

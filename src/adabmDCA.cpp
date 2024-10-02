@@ -31,7 +31,6 @@ using namespace std;
 int main(int argc, char **argv)
 {
 
-  cout << setprecision(1);
   /* START INITIALIZATION */
   char hostname[HOST_NAME_MAX];
   char username[LOGIN_NAME_MAX];
@@ -214,13 +213,15 @@ int main(int argc, char **argv)
 
   /* FINAL OPERATIONS */
   fprintf(params.filel, "****** Final sampling ******\n");
-  fflush(stdout);
+  fflush(params.filel);
   params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain, eqfile);
   if (!params.maxiter)
   {
-    model.get_Teq(eqfile);
-    fprintf(params.filel, "Sampling may take a while...");
-    fflush(stdout);
+    fprintf(params.filel, "Estimating mixing time...");
+    fflush(params.filel);
+    model.get_Teq(eqfile, data.msa);
+    fprintf(params.filel, "Sampling may take a while...\n");
+    fflush(params.filel);
     if (strcmp(params.ctype, "i") == 0)
       model.sample_ising(data.msa);
     else

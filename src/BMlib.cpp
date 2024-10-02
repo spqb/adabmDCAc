@@ -126,6 +126,8 @@ int Params::read_params(int &argc, char **argv)
 			{
 				// nprinteq = true;
 				get_abc = true;
+				Teq = 0;
+				Twait = 0;
 			}
 			break;
 		case 'k':
@@ -404,7 +406,8 @@ void Params::print_learning_strategy()
 	}
 	else
 	{
-		fprintf(filel, "Fixed sampling time: %d fixed equilibration time: %d\n", Twait, Teq);
+		if (maxiter > 0)
+			fprintf(filel, "Fixed sampling time: %d fixed equilibration time: %d\n", Twait, Teq);
 	}
 	fprintf(filel, "Using %d seeds and tot. number of points %d\n", Nmc_starts, Nmc_starts * Nmc_config * num_threads);
 	if (restore_flag)
@@ -417,11 +420,13 @@ void Params::print_learning_strategy()
 	}
 	else
 	{
-		fprintf(filel, "MC chains are randomly initialized");
+		if (maxiter > 0)
+			fprintf(filel, "MC chains are randomly initialized");
 	}
 	if (persistent)
 	{
-		fprintf(filel, " only at the beginning, and are then persistent\n");
+		if (maxiter > 0)
+			fprintf(filel, " only at the beginning, and are then persistent\n");
 	}
 	else
 	{

@@ -367,7 +367,7 @@ int print_alphabet(char *ctype, FILE *filel)
 	}
 	else if (abc.length() > 1)
 	{
-		fprintf(filel, "Using alphabet: %s\n ", abc.c_str());
+		fprintf(filel, "Using alphabet: %s\n", abc.c_str());
 		q = abc.length();
 	}
 	else
@@ -427,3 +427,4 @@ vector<char> alphabet(char *ctype)
 	}
 	return ris;
 }
+

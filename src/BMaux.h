@@ -38,6 +38,7 @@ int convert_char(char ch, char *ctype);
 int print_alphabet(char *ctype, FILE *filel);
 vector<char> alphabet(char *ctype);
 
+
 /* quicksort from small to large */
 template <class T>
 int quicksort(vector<T> &x, vector<int> &tmp_idx, int first, int last)

@@ -115,9 +115,10 @@ public:
   int n_active();
   int activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm);
   int print_natural_samples(char *filename, vector<vector<unsigned char>> &msa);
-  void get_Teq(char *filename);
-  double compute_twins_overlap(vector<vector<vector<unsigned char>>> &seq);
-  double compute_ind_overlap(vector<vector<vector<unsigned char>>> &seq);
+  void get_Teq(char *filename, vector<vector<unsigned char>> &msa);
+  double compute_t_halft_overlap(vector<vector<vector<unsigned char>>> &seq);
+  double compute_t_overlap(vector<vector<vector<unsigned char>>> &seq);
+  void print_curr_samples(char *filename);
 };
 
 #endif
