@@ -132,7 +132,8 @@ int Params::read_params(int &argc, char **argv)
 			}
 			break;
 		case 'k':
-			label = optarg + '_';
+			label = strcat(optarg, "_");
+			fflush(stdout);
 			break;
 		case 'l':
 			w_th = atof(optarg);
