@@ -92,6 +92,7 @@ int Params::read_params(int &argc, char **argv)
 				{NULL, 0, NULL, 0}};
 		int option_index = 0;
 		c = getopt_long(argc, argv, "a:b:c:d:e:f:g:hi:j:k:l:m:n:op:q:r:s:t:u:v:w:x:y:z:ABC:DE:FGHI:J:K:LMNPQRST:UVW:X:Z", long_options, &option_index);
+		printf("%c %s\n", c, optarg);
 		if (c == -1)
 			break;
 		switch (c)
@@ -100,7 +101,6 @@ int Params::read_params(int &argc, char **argv)
 			restore_flag = true;
 			break;
 		case 'a':
-			// learn_strat = atoi(optarg);
 			outputfolder = optarg;
 			break;
 		case 'b':
@@ -125,15 +125,14 @@ int Params::read_params(int &argc, char **argv)
 			maxiter = atoi(optarg);
 			if (maxiter == 0)
 			{
-				// nprinteq = true;
 				get_abc = true;
 				Teq = 0;
 				Twait = 0;
 			}
 			break;
 		case 'k':
-			label = strcat(optarg, "_");
-			fflush(stdout);
+			label = (char *) calloc(1000, sizeof(char));
+			sprintf(label, "%s_", optarg);
 			break;
 		case 'l':
 			w_th = atof(optarg);

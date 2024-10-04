@@ -40,6 +40,7 @@ int main(int argc, char **argv)
   Params params;
   params.read_params(argc, argv);
   sprintf(logfile, "%s/%sadabmDCA.log", params.outputfolder, params.label);
+  printf("%d %d %s\n", params.nprint, params.nprintfile, params.label);
   cout << "****** Boltzmann machine for DCA model ******" << endl;
   cout << "Output files in " << params.outputfolder << " folder" << endl;
   if (mkdir(params.outputfolder, 0777) == -1)
