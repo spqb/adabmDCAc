@@ -92,7 +92,6 @@ int Params::read_params(int &argc, char **argv)
 				{NULL, 0, NULL, 0}};
 		int option_index = 0;
 		c = getopt_long(argc, argv, "a:b:c:d:e:f:g:hi:j:k:l:m:n:op:q:r:s:t:u:v:w:x:y:z:ABC:DE:FGHI:J:K:LMNPQRST:UVW:X:Z", long_options, &option_index);
-		printf("%c %s\n", c, optarg);
 		if (c == -1)
 			break;
 		switch (c)
