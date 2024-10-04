@@ -428,3 +428,12 @@ vector<char> alphabet(char *ctype)
 	return ris;
 }
 
+int sample_seq(vector<double> &cum_sum)
+{
+	double u = (double)rand() / RAND_MAX;
+    int outcome = 0;
+    while (u > cum_sum[outcome]) {
+        outcome++;
+    }
+    return outcome;
+}

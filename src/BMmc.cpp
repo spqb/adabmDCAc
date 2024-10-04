@@ -1082,7 +1082,6 @@ void Model::print_last_chain(char *filename)
   fclose(fp);
 }
 
-
 void Model::print_samples(char *filename)
 {
 
@@ -1705,25 +1704,34 @@ int Model::activate_compwise(double c, int iter, vector<vector<MYFLOAT>> &sm)
 
 /******************** METHODS FOR FINAL SAMPLING ***********************************************************/
 
-double Model::compute_t_halft_overlap(vector<vector<vector<unsigned char>>> &seq)
+void Model::compute_t_halft_overlap(vector<vector<vector<unsigned char>>> &seq, double *av_ov, double *std_ov)
 {
-  double av_ov = 0;
   int nc = 0;
+  double va_ov = 0;
+  *av_ov = 0;
+  *std_ov = 0;
   for (int t = 0; t < params->num_threads; t++)
   {
     for (int s = 0; s < params->Nmc_starts / 2; s++)
     {
       nc++;
-      av_ov += overlap(seq[t][2 * s], seq[t][2 * s + 1]) / (L * 1.0);
+      double aux = overlap(seq[t][2 * s], seq[t][2 * s + 1]) / (L * 1.0);
+      *av_ov += aux;
+      va_ov += aux * aux;
     }
   }
-  return av_ov / nc;
+  *av_ov /= nc;
+  va_ov /= nc;
+  va_ov -= *av_ov * *av_ov;
+  *std_ov = sqrt(va_ov);
 }
 
-double Model::compute_t_overlap(vector<vector<vector<unsigned char>>> &seq)
+void Model::compute_t_overlap(vector<vector<vector<unsigned char>>> &seq, double *av_ov, double *std_ov)
 {
-  double av_ov_even = 0;
+  double va_ov_even = 0;
   int nc = 0;
+  *av_ov = 0;
+  *std_ov = 0;
   int even_idx[params->Nmc_starts / 2];
 
   for (int s = 0; s < params->Nmc_starts / 2; s++)
@@ -1734,49 +1742,56 @@ double Model::compute_t_overlap(vector<vector<vector<unsigned char>>> &seq)
   {
     for (int s = 0; s < params->Nmc_starts / 2; s++)
     {
-        av_ov_even += overlap(seq[t][2 * s], seq[t][even_idx[s]]) / (L * 1.0);
-        nc++;
+      double aux = overlap(seq[t][2 * s], seq[t][even_idx[s]]) / (L * 1.0);
+      *av_ov += aux;
+      va_ov_even += aux * aux;
+      nc++;
     }
   }
-  av_ov_even /= nc;
-  return av_ov_even;
+  *av_ov /= nc;
+  va_ov_even /= nc;
+  va_ov_even -= *av_ov * *av_ov;
+  *std_ov = sqrt(va_ov_even);
 }
 
-void Model::get_Teq(char *filename, vector<vector<unsigned char>> &msa)
+void Model::get_Teq(char *filename, vector<vector<unsigned char>> &msa, vector<MYFLOAT> &w)
 {
 
   FILE *fp = 0;
   fp = fopen(filename, "w");
   char filedebug[1000];
-  double ov_ind, ov_twins;
-  vector<unsigned char> tmp(L);
+  double ov_ind, std_ind, ov_twins, std_twins;
+  double prob_w[int(msa.size())];
+  vector<double> cum_sum(int(msa.size()));
+
+  double sum_w = 0;
+  for (int i = 0; i < (int)(msa.size()); i++)
+    sum_w += w[i];
+  for (int i = 0; i < (int)(msa.size()); i++)
+    prob_w[i] = w[i] / sum_w;
+  cum_sum[0] = 0;
+  for (int i = 1; i < (int)(msa.size()); i++)
+    cum_sum[i] = cum_sum[i - 1] + prob_w[i - 1];
+
   for (int t = 0; t < params->num_threads; t++)
   {
     for (int s = 0; s < params->Nmc_starts / 2; s++)
     {
-
-      int m = (int)rand() % int(msa.size());
+      int m = sample_seq(cum_sum); //(int)rand() % int(msa.size());
       for (int i = 0; i < L; i++)
       {
-        if (params->file_msa)
-          tmp[i] = msa[m][i];
-        else
-          tmp[i] = (unsigned char)(int)rand() % q;
-      }
-      for (int i = 0; i < L; i++)
-      {
-        mstat->curr_state[t][2 * s][i] = tmp[i];
-        mstat->curr_state[t][2 * s + 1][i] = tmp[i];
+        mstat->curr_state[t][2 * s][i] = msa[m][i];
+        mstat->curr_state[t][2 * s + 1][i] = msa[m][i];
       }
     }
   }
   fflush(stdout);
   bool eqmc = false;
-  ov_twins = compute_t_halft_overlap(mstat->curr_state);
-  ov_ind = compute_t_overlap(mstat->curr_state);
-  fprintf(fp, "0 %lf %lf\n", ov_twins, ov_ind);
+  compute_t_halft_overlap(mstat->curr_state, &ov_twins, &std_twins);
+  compute_t_overlap(mstat->curr_state, &ov_ind, &std_ind);
+  fprintf(fp, "0 %lf %lf %lf %lf\n", ov_twins, std_twins, ov_ind, std_ind);
   sprintf(filedebug, "samples_Teq0.fasta");
-  //print_curr_samples(filedebug); //debug
+  // print_curr_samples(filedebug); //debug
   params->Teq = 1;
   int count = 0;
   while (!eqmc)
@@ -1793,27 +1808,28 @@ void Model::get_Teq(char *filename, vector<vector<unsigned char>> &msa)
       for (int t = 0; t < params->num_threads; t++)
         for (int s = 0; s < params->Nmc_starts / 2; s++)
           MC_sweep(mstat->curr_state[t][2 * s + 1]);
-      ov_twins = compute_t_halft_overlap(mstat->curr_state);
-      ov_ind = compute_t_overlap(mstat->curr_state);
-      fprintf(fp, "%d %lf %lf %d\n", (int)(params->Teq * 0.5), ov_twins, ov_ind, count);
+      compute_t_halft_overlap(mstat->curr_state, &ov_twins, &std_twins);
+      compute_t_overlap(mstat->curr_state, &ov_ind, &std_ind);
+      fprintf(fp, "%d %lf %lf %lf %lf\n", (int)(params->Teq * 0.5), ov_twins, std_twins, ov_ind, std_ind);
       fflush(fp);
-      if (fabs(ov_twins-ov_ind) < 0.01) 
+      if (fabs(ov_twins - ov_ind) < 0.1 * sqrt(std_twins * std_twins + std_ind * std_ind))
         count++;
       else
         count = 0;
-      if(count > 10)
+      if (count > 10)
         eqmc = true;
     }
     sprintf(filedebug, "samples_Teq%d.fasta", params->Teq);
-    //print_curr_samples(filedebug); //debug
+    // print_curr_samples(filedebug); //debug
     params->Teq++;
   }
   params->Teq--;
   params->Teq = (int)(params->Teq * 0.5);
-  fprintf(params->filel, "Estimated number of sweeps: %d\n", params->Teq);
+  fprintf(params->filel, "%d\n", params->Teq);
+  fprintf(params->filel, "Estimated number of sweeps: %d x %d\n", params->nmix, params->Teq);
+  params->Teq *= params->nmix;
   fclose(fp);
   fflush(params->filel);
-  params->persistent = true; // start from last configurations
 }
 
 void Model::print_curr_samples(char *filename)

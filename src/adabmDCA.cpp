@@ -217,9 +217,9 @@ int main(int argc, char **argv)
   params.construct_filenames(iter, conv, par, par_zsum, ene, corr, score, first, sec, third, lchain, eqfile);
   if (!params.maxiter)
   {
-    fprintf(params.filel, "Estimating mixing time...");
+    fprintf(params.filel, "Estimated mixing time = ");
     fflush(params.filel);
-    model.get_Teq(eqfile, data.msa);
+    model.get_Teq(eqfile, data.msa, data.w);
     fprintf(params.filel, "Sampling may take a while...\n");
     fflush(params.filel);
     if (strcmp(params.ctype, "i") == 0)

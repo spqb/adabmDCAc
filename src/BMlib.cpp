@@ -59,6 +59,7 @@ Params::Params()
 	lrateh = 5e-2;
 	lambda_e = 0.5;
 	conv = 0.95;
+	nmix = 2;
 	pseudocount = 0;
 	betaJ = 1.0;
 	betaH = 1.0;
@@ -90,7 +91,7 @@ int Params::read_params(int &argc, char **argv)
 				{"restore", no_argument, NULL, 'o'},
 				{NULL, 0, NULL, 0}};
 		int option_index = 0;
-		c = getopt_long(argc, argv, "a:b:c:d:e:f:g:hi:j:k:l:m:n:op:q:r:s:t:u:v:w:x:y:z:ABC:DE:FGHI:J:K:LMNPQRST:UVWX:Z", long_options, &option_index);
+		c = getopt_long(argc, argv, "a:b:c:d:e:f:g:hi:j:k:l:m:n:op:q:r:s:t:u:v:w:x:y:z:ABC:DE:FGHI:J:K:LMNPQRST:UVW:X:Z", long_options, &option_index);
 		if (c == -1)
 			break;
 		switch (c)
@@ -247,6 +248,9 @@ int Params::read_params(int &argc, char **argv)
 		case 'V':
 			drate = atof(optarg);
 			break;
+		case 'W':
+			nmix = atoi(optarg);
+			break;
 		/*
 		case 'U':
 			dec_sdkl = false;
@@ -344,7 +348,7 @@ int Params::read_params(int &argc, char **argv)
 			cout << "-X : (int) Activate every X gradient steps, default: " << gsteps << endl;
 			cout << endl;
 
-			cout << "Options for Monte Carlo sampling:" << endl;
+			cout << "Options for Monte Carlo sampling (training):" << endl;
 			cout << "-e : (number) Initial MC equilibration time (in MCsweeps), default: " << Teq << endl;
 			cout << "-t : (number) Initial sampling time of MC algorithm (in MCsweeps), default: " << Twait << endl;
 			cout << "-s : (number) Number of the MC chains per thread, default: " << Nmc_starts << endl;
@@ -354,6 +358,10 @@ int Params::read_params(int &argc, char **argv)
 			cout << "-P : (flag) Use persistent MC chains" << endl;
 			cout << "-Q : (flag) Initialize MC chains in data points" << endl;
 			cout << "-L : (flag) Do not adapt Teq and Twait to achieve equilibration" << endl;
+			cout << endl;
+
+			cout << "Options for Monte Carlo sampling (at convergence):" << endl;
+			cout << "-W : (int) nmix. Number of sweeps = nmix x mixing time. Default: nmix = 2" << endl;
 			cout << endl;
 
 			cout << "Integrated alternative Potts models:" << endl;

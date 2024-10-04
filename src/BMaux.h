@@ -37,6 +37,7 @@ int convert_char_potts(char a);
 int convert_char(char ch, char *ctype);
 int print_alphabet(char *ctype, FILE *filel);
 vector<char> alphabet(char *ctype);
+int sample_seq(vector<double> &cum_sum);
 
 
 /* quicksort from small to large */

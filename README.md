@@ -50,8 +50,9 @@ Add the flag `--restore` to restart the training from the checkpoint saved in th
 ### Sampling
 Use
 ```
-./adabmDCA -p <params> -i 0 -S -L
+./adabmDCA -p <params> -f <MSA file> -i 0 -S -L -s <nconfig>
 ```
+  - `-W nmix` (optional)
 
 ## Output files
   - A lot of things
