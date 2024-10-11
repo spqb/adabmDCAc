@@ -78,7 +78,9 @@ Params::Params()
 	gsteps = 0;
 	nactive = 0.001;
 	drate = 0.01;
+	// long options
 	restore_flag = false;
+	energies_flag = false;
 }
 
 int Params::read_params(int &argc, char **argv)
@@ -89,15 +91,21 @@ int Params::read_params(int &argc, char **argv)
 		struct option long_options[] =
 			{
 				{"restore", no_argument, NULL, 'o'},
-				{NULL, 0, NULL, 0}};
+				{"energies", no_argument, NULL, 'O'},
+				{NULL, 0, NULL, 0}
+
+			};
 		int option_index = 0;
-		c = getopt_long(argc, argv, "a:b:c:d:e:f:g:hi:j:k:l:m:n:op:q:r:s:t:u:v:w:x:y:z:ABC:DE:FGHI:J:K:LMNPQRST:UVW:X:Z", long_options, &option_index);
+		c = getopt_long(argc, argv, "a:b:c:d:e:f:g:hi:j:k:l:m:n:op:q:r:s:t:u:v:w:x:y:z:ABC:DE:FGHI:J:K:LMNOPQRST:UVW:X:Z", long_options, &option_index);
 		if (c == -1)
 			break;
 		switch (c)
 		{
 		case 'o':
 			restore_flag = true;
+			break;
+		case 'O':
+			energies_flag = true;
 			break;
 		case 'a':
 			outputfolder = optarg;
@@ -130,7 +138,7 @@ int Params::read_params(int &argc, char **argv)
 			}
 			break;
 		case 'k':
-			label = (char *) calloc(1000, sizeof(char));
+			label = (char *)calloc(1000, sizeof(char));
 			sprintf(label, "%s_", optarg);
 			break;
 		case 'l':
@@ -747,10 +755,15 @@ Data::Data(Params *_params) : params(_params)
 	q = print_alphabet(params->ctype, params->filel);
 	if (params->file_msa)
 	{
-		read_msa();
-		compute_w();
-		alloc_structures();
-		compute_empirical_statistics();
+		if (params->energies_flag)
+			read_msa();
+		else
+		{
+			read_msa();
+			compute_w();
+			alloc_structures();
+			compute_empirical_statistics();
+		}
 	}
 	else if (params->file_freq)
 	{

@@ -1129,6 +1129,7 @@ void Model::print_samples_ising(char *filename)
   fclose(fp);
 }
 
+/*
 int Model::print_natural_samples(char *filename, vector<vector<unsigned char>> &msa)
 {
   FILE *fp;
@@ -1143,6 +1144,87 @@ int Model::print_natural_samples(char *filename, vector<vector<unsigned char>> &
   }
   fclose(fp);
   return 0;
+}
+*/
+
+void Model::print_natural_samples(char *filename, int L)
+{
+
+  FILE *filemsa;
+  FILE *fp;
+  vector<char> abc = alphabet(params->ctype);
+  if (!(fp = fopen(filename, "w")))
+    cerr << "I couldn't open " << filename << endl;
+  char ch;
+  int readseq = 0, newseq = 0, ignseq = 0;
+  if (!params->file_msa || !(filemsa = fopen(params->file_msa, "r")))
+  {
+    cerr << "I couldn't open " << params->file_msa << endl;
+    exit(EXIT_FAILURE);
+  }
+  vector<unsigned char> auxseq;
+  vector<unsigned char> seqname;
+  while ((ch = fgetc(filemsa)) != EOF)
+  {
+    if (ch == '>')
+    {
+      newseq = 1;
+      readseq = 0;
+      if (int(auxseq.size()) == L && !ignseq)
+      {
+        fprintf(fp, ">");
+        for (int i = 0; i < int(seqname.size()); i++)
+          fprintf(fp, "%c", seqname[i]);
+        fprintf(fp, " | DCAenergy %lf\n", prof_energy(auxseq) + DCA_energy(auxseq));
+        for (int i = 0; i < L; i++)
+          fprintf(fp, "%c", abc[auxseq[i]]);
+        fprintf(fp, "\n");
+      }
+      ignseq = 0;
+      seqname.clear();
+    }
+    else
+    {
+      if (ch == '\n' && newseq == 1)
+      {
+        readseq = 1;
+        newseq = 0;
+        auxseq.clear();
+      }
+      else if (ch != '\n' && newseq == 0 && readseq == 1)
+      {
+        if (convert_char(ch, params->ctype) == (unsigned char)-1)
+        {
+          fprintf(stderr, "Ignoring sequence ");
+          for (int i = 0; i < int(seqname.size()); i++)
+            fprintf(stderr, "%c", seqname[i]);
+          fprintf(stderr, "\n");
+          ignseq = 1;
+          readseq = 0;
+        }
+        else
+          auxseq.push_back(convert_char(ch, params->ctype));
+      }
+      else if (ch != '\n' && newseq == 1 && readseq == 0)
+      {
+        seqname.push_back(ch);
+      }
+    }
+  }
+
+  if (int(auxseq.size()) == L && !ignseq)
+  {
+    fprintf(fp, ">");
+    for (int i = 0; i < int(seqname.size()); i++)
+      fprintf(fp, "%c", seqname[i]);
+    fprintf(fp, " | DCAenergy %lf\n", prof_energy(auxseq) + DCA_energy(auxseq));
+    for (int i = 0; i < L; i++)
+      fprintf(fp, "%c", abc[auxseq[i]]);
+    fprintf(fp, "\n");
+  }
+
+  fclose(filemsa);
+  fclose(fp);
 }
 
 void Model::update_statistics()

@@ -54,9 +54,16 @@ Use
 ```
   - `-W nmix` (optional)
 
+
+### Computing energies
+```
+./adabmDCA -p <params> -f <MSA file> --energies
+```
+
+
 ## Output files
   - A lot of things
   - _Parameters file_. Missing couplings are assumed to be inactive when the training re-starts.
 
 ## To be done
-  - Compute DMS score, energies of a MSA
+  - Compute DMS score
