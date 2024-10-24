@@ -31,7 +31,7 @@ Model::Model(int _q, int _L, Params *_params, Stats *_mstat, vector<vector<unsig
     init_current_state_ising(msa);
   else
   {
-    if (params->restore_flag)
+    if (params->restore_flag || params->file_last_chain)
       init_last_chain();
     else
       init_current_state(msa);
@@ -240,7 +240,7 @@ int Model::initialize_parameters(vector<MYFLOAT> &fm, vector<vector<MYFLOAT>> &c
     FILE *filep;
     if (!(filep = fopen(params->file_params, "r")))
     {
-      cerr << "File " << params->file_params << " not found" << params->file_params << endl;
+      cerr << "File " << params->file_params << " not found" << endl;
       exit(EXIT_FAILURE);
     }
     else
@@ -1147,6 +1147,37 @@ int Model::print_natural_samples(char *filename, vector<vector<unsigned char>> &
 }
 */
 
+void Model::print_mutants(char *filename, vector<vector<unsigned char>> &msa, int L)
+{
+  FILE *fp;
+  vector<char> abc = alphabet(params->ctype);
+  if (!(fp = fopen(filename, "w")))
+    cerr << "I couldn't open " << filename << endl;
+  double en_wt = prof_energy(msa[0]) + DCA_energy(msa[0]);
+  vector<unsigned char> auxseq;
+  
+  for (int i = 0; i < L; i ++) 
+      auxseq.push_back(msa[0][i]);
+
+  for (int i = 0; i < L; i++) {
+    int wt = msa[0][i];
+    char abc_wt = abc[wt];
+    for (int a = 0; a < q; a ++) {
+      if(a == wt)
+        continue;
+      char abc_mut = abc[a];
+      auxseq[i] = a;
+      double en_mut = prof_energy(auxseq) + DCA_energy(auxseq); 
+      fprintf(fp, ">%c%d%c | DCAscore: %.3lf\n", abc_wt, i + 1, abc_mut, en_mut - en_wt);
+      for (int i = 0; i < L; i++)
+        fprintf(fp, "%c", abc[auxseq[i]]);
+      fprintf(fp, "\n");
+      auxseq[i] = wt;
+    }
+
+  }
+}
+
 void Model::print_natural_samples(char *filename, int L)
 {
 
@@ -1665,10 +1696,10 @@ int Model::decimate_compwise(int c, int iter)
     decJ[j * q + b][i * q + a] = 0;
   }
   index = tmp_idx[c];
-  fprintf(stdout, "Smallest sDKL associated with removed couplings is %.2e (i: %i j: %i a: %d b: %d)\n", sorted_struct[c], idx[index][0], idx[index][1], idx[index][2], idx[index][3]);
+  //fprintf(stdout, "Smallest sDKL associated with removed couplings is %.2e (i: %i j: %i a: %d b: %d)\n", sorted_struct[c], idx[index][0], idx[index][1], idx[index][2], idx[index][3]);
   double nref = (L * (L - 1) * q * q) / 2;
   model_sp += c / nref;
-  fprintf(stdout, "Sparsity after decimation is %.3f\n", model_sp);
+  //fprintf(stdout, "Sparsity after decimation is %.3f\n", model_sp);
   return 0;
 }
 
@@ -1718,10 +1749,10 @@ int Model::decimate_ising(int c, int iter)
     decJ[j][i] = 0;
   }
   index = tmp_idx[c];
-  fprintf(params->filel, "Smallest sDKL associated with removed couplings is %.2e (i: %i j: %i)\n", sorted_struct[c], idx[index][0], idx[index][1]);
+  //fprintf(params->filel, "Smallest sDKL associated with removed couplings is %.2e (i: %i j: %i)\n", sorted_struct[c], idx[index][0], idx[index][1]);
   double nref = (L * (L - 1)) / 2;
   model_sp += c / nref;
-  fprintf(params->filel, "Sparsity after decimation is %.3lf\n", model_sp);
+  //fprintf(params->filel, "Sparsity after decimation is %.3lf\n", model_sp);
   fflush(params->filel);
   return 0;
 }

@@ -64,8 +64,22 @@ int main(int argc, char **argv)
     fprintf(params.filel, "Printing energies in %s...done\n", ene);
     return 0;
   }
+  //////////////// code for computing dms scores of a wild-type ////////////////////
+  if (params.dms_flag) {
+     Data data(&params);
+    Stats mstat;
+    Model model(data.q, data.L, &params, &mstat, data.msa, data.tm.size(), &data.tm_index);
+    model.initialize_parameters(data.fm, data.cov);
+    char ene[1000];
+    string abc = params.file_msa;
+    std::string base_filename = abc.substr(abc.find_last_of("/\\") + 1);
+		sprintf(ene, "%s/mutants_%s", params.outputfolder, base_filename.c_str());
+    model.print_mutants(ene, data.msa, model.L);
+    fprintf(params.filel, "Printing DMS scores in %s...done\n", ene);
+    return 0;
+  }
   ////////////////////////////////////////////////////////////////////////////////////
-  long myseed = params.seed ? params.seed : time(NULL);
+  long myseed = params.seed; // ? params.seed : time(NULL);
   srand(myseed);
   fprintf(params.filel, "Seed of the random number generator: %ld\n", myseed);
   Data data(&params);

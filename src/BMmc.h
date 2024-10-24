@@ -120,6 +120,7 @@ public:
   void compute_t_overlap(vector<vector<vector<unsigned char>>> &seq, double *av_ov, double *std_ov);
   void compute_t_halft_overlap(vector<vector<vector<unsigned char>>> &seq, double *av_ov, double *std_ov);
   void print_curr_samples(char *filename);
+  void print_mutants(char *filename, vector<vector<unsigned char>> &msa, int L);
 };
 
 #endif

@@ -24,7 +24,7 @@ class Params
 public:
   FILE * filel;
   char *file_msa, *file_freq, *file_w, *file_params, *file_msa_e, init, *label, *outputfolder, *ctype, *file_3points, *file_cc, *file_last_chain;
-  bool energies_flag, restore_flag, deczero, print_samples, Metropolis, Gibbs, nprinteq, rmgauge, dgap, gapnn, phmm, compwise, persistent, initdata, overwrite, adapt, dec_sdkl, get_abc;
+  bool dms_flag, energies_flag, restore_flag, deczero, print_samples, Metropolis, Gibbs, nprinteq, rmgauge, dgap, gapnn, phmm, compwise, persistent, initdata, overwrite, adapt, dec_sdkl, get_abc;
   double initst, sparsity, rho, w_th, regJ1, regJ2, lrateJ, lrateh, conv, pseudocount, betaJ, betaH, lambda_e, drate, nactive;
   int tau, seed, learn_strat, nprint, nprintfile, Teq, Nmc_starts, Nmc_config, Twait, Twait_last, maxiter, gsteps, nmix, num_threads;
 

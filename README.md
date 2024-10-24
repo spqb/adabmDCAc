@@ -27,13 +27,14 @@ In the __src__ folder run
 ```
 make
 ```
-It will generate the executable file __adabmDCA__. See 
+It will generate the executable file __adabmDCA__. In the main folder run also `chmod +x adabmDCA.sh` to use the main script file. See 
 ```
-./adabmDCA -h
+./adabmDCA.sh --help
 ```
-for a complete list of features.
+for the basic runs or look at the [main page](https://github.com/spqb/adabmDCA).
 
-## Basic runs
+
+## Working directly in C/C++
 
 
 ### Learning a Potts model from a MSA
@@ -61,7 +62,7 @@ for a complete list of features.
 ```
   - `-Z` flag inactivates all couplings at the beginning of the training;
   - `-I 0.` allows one to start from a profile model;
-  - Additional options `-U <nactive>`;
+  - Additional options `-U <factivate>`;
   - Convergence at target Pearson whatever the density.
 
 ### Restore training
@@ -77,13 +78,27 @@ Use
 
 ### Computing energies
 ```
-./adabmDCA -p <params> -f <MSA file> --energies
+./adabmDCA --energies -p <params> -f <MSA file> 
 ```
 
+### DMS scores
+```
+./adabmDCA --dms -p <params> -f <wild type> 
+```
 
-## Output files
-  - A lot of things
-  - _Parameters file_. Missing couplings are assumed to be inactive when the training re-starts.
+### Other features
+See
+```
+./adabmDCA -h
+```
+for a complete list.
 
-## To be done
-  - Compute DMS score
+## License
+This package is open-sourced under the MIT License.
+
+## Citation
+If you use (even partially) this code, please cite:
+> Rosset, L., Netti, R., Muntoni, A.P., Weigt, M., & Zamponi, F. (2024). adabmDCA 2.0: A flexible but easy-to-use package for Direct Coupling Analysis.
+
+## Acknowledgments
+This work was developed in collaboration with Sorbonne Université, Sapienza Università di Roma, and Politecnico di Torino.

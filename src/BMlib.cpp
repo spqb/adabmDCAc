@@ -64,7 +64,7 @@ Params::Params()
 	betaJ = 1.0;
 	betaH = 1.0;
 	tau = 1000; // tau parameter for search and converge (learn_strat = 3)
-	seed = 0;
+	seed = 1234;
 	learn_strat = 0;
 	nprint = 100;
 	nprinteq = false;
@@ -81,6 +81,7 @@ Params::Params()
 	// long options
 	restore_flag = false;
 	energies_flag = false;
+	dms_flag = false;
 }
 
 int Params::read_params(int &argc, char **argv)
@@ -92,11 +93,12 @@ int Params::read_params(int &argc, char **argv)
 			{
 				{"restore", no_argument, NULL, 'o'},
 				{"energies", no_argument, NULL, 'O'},
+				{"dms", no_argument, NULL, 'Y'},
 				{NULL, 0, NULL, 0}
 
 			};
 		int option_index = 0;
-		c = getopt_long(argc, argv, "a:b:c:d:e:f:g:hi:j:k:l:m:n:op:q:r:s:t:u:v:w:x:y:z:ABC:DE:FGHI:J:K:LMNOPQRST:UVW:X:Z", long_options, &option_index);
+		c = getopt_long(argc, argv, "a:b:c:d:e:f:g:hi:j:k:l:m:n:op:q:r:s:t:u:v:w:x:y:z:AB:C:DE:FGH:I:J:K:LMNOPQRST:UV:W:X:YZ", long_options, &option_index);
 		if (c == -1)
 			break;
 		switch (c)
@@ -106,6 +108,9 @@ int Params::read_params(int &argc, char **argv)
 			break;
 		case 'O':
 			energies_flag = true;
+			break;
+		case 'Y':
+			dms_flag = true;
 			break;
 		case 'a':
 			outputfolder = optarg;
@@ -192,8 +197,9 @@ int Params::read_params(int &argc, char **argv)
 		case 'C':
 			file_cc = optarg;
 			break;
-		// case 'B':
-		// blockwise = true;
+		case 'B':
+			file_last_chain = optarg;
+			break;
 		// dec_f = false;
 		// dec_J = false;
 		// dec_sdkl = true;
@@ -365,6 +371,7 @@ int Params::read_params(int &argc, char **argv)
 			cout << "-P : (flag) Use persistent MC chains" << endl;
 			cout << "-Q : (flag) Initialize MC chains in data points" << endl;
 			cout << "-L : (flag) Do not adapt Teq and Twait to achieve equilibration" << endl;
+			cout << "-B : (file) Start MCMC from given chains" << endl;
 			cout << endl;
 
 			cout << "Options for Monte Carlo sampling (at convergence):" << endl;
@@ -425,7 +432,7 @@ void Params::print_learning_strategy()
 			fprintf(filel, "Fixed sampling time: %d fixed equilibration time: %d\n", Twait, Teq);
 	}
 	fprintf(filel, "Using %d seeds and tot. number of points %d\n", Nmc_starts, Nmc_starts * Nmc_config * num_threads);
-	if (restore_flag)
+	if (restore_flag || file_last_chain)
 	{
 		fprintf(filel, "MC chains are initialized from restored file");
 	}
@@ -480,7 +487,7 @@ void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum,
 			sprintf(par, "%s/%sparams.dat", outputfolder, label);
 			sprintf(par_zsum, "%s/%sparams_zerosum.dat", outputfolder, label);
 			sprintf(ene, "%s/%ssamples.dat", outputfolder, label);
-			sprintf(score, "%s/%sscore.dat", outputfolder, label);
+			sprintf(score, "%s/%sfrobenius.dat", outputfolder, label);
 			sprintf(first, "%s/%sfirst_mom.dat", outputfolder, label);
 			sprintf(sec, "%s/%ssec_mom.dat", outputfolder, label);
 			sprintf(third, "%s/%sthird_mom.dat", outputfolder, label);
@@ -493,7 +500,7 @@ void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum,
 			sprintf(par, "%s/%sparams_%d.dat", outputfolder, label, iter);
 			sprintf(par_zsum, "%s/%sarameters_zerosum_%d.dat", outputfolder, label, iter);
 			sprintf(ene, "%s/%ssamples_%d.dat", outputfolder, label, iter);
-			sprintf(score, "%s/%sscore_%d.dat", outputfolder, label, iter);
+			sprintf(score, "%s/%sfrobenius_%d.dat", outputfolder, label, iter);
 			sprintf(first, "%s/%sfirst_mom_%d.dat", outputfolder, label, iter);
 			sprintf(sec, "%s/%ssec_mom_%d.dat", outputfolder, label, iter);
 			sprintf(third, "%s/%sthird_mom_%d.dat", outputfolder, label, iter);
@@ -507,7 +514,7 @@ void Params::construct_filenames(int iter, bool conv, char *par, char *par_zsum,
 		sprintf(par, "%s/%sparams.dat", outputfolder, label);
 		sprintf(par_zsum, "%s/%sparams_zerosum.dat", outputfolder, label);
 		sprintf(ene, "%s/%ssamples.dat", outputfolder, label);
-		sprintf(score, "%s/%sscore.dat", outputfolder, label);
+		sprintf(score, "%s/%sfrobenius.dat", outputfolder, label);
 		sprintf(first, "%s/%sfirst_mom.dat", outputfolder, label);
 		sprintf(sec, "%s/%ssec_mom.dat", outputfolder, label);
 		sprintf(third, "%s/%sthird_mom.dat", outputfolder, label);
@@ -755,7 +762,7 @@ Data::Data(Params *_params) : params(_params)
 	q = print_alphabet(params->ctype, params->filel);
 	if (params->file_msa)
 	{
-		if (params->energies_flag)
+		if (params->energies_flag || params->dms_flag)
 			read_msa();
 		else
 		{
@@ -848,8 +855,11 @@ void Data::read_msa()
 			}
 			else if (L != int(auxseq.size()) && !ignseq)
 			{
-				cerr << "MSA reading error!" << endl;
-				exit(1);
+				if (!(params->dms_flag))
+				{
+					cerr << "MSA reading error!" << endl;
+					exit(1);
+				}
 			}
 			if (int(auxseq.size()) > 0 && !ignseq)
 				msa.push_back(auxseq);
@@ -886,7 +896,15 @@ void Data::read_msa()
 	if (int(auxseq.size()) > 0)
 		msa.push_back(auxseq); // last sequence
 	M = int(msa.size());
-	fprintf(params->filel, "Reading alignment completed. M = %d L = %d q = %d\n", M, L, q);
+
+	if (params->dms_flag)
+	{
+		assert(M == 1);
+		L = int(auxseq.size());
+		fprintf(params->filel, "Reading wild-type completed. L = %d q = %d\n", L, q);
+	}
+	else
+		fprintf(params->filel, "Reading alignment completed. M = %d L = %d q = %d\n", M, L, q);
 
 	if (M == 0 || L == 0)
 	{
