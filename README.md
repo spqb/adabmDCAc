@@ -1,6 +1,26 @@
-# adabmDCAc
+# adabmDCA 2.0 - Direct Coupling Analysis in C/C++
 
-This is a C/C++ implementation of the Boltzmann machine learning for biological sequences.
+**Authors:**  
+- **Lorenzo Rosset** (Sorbonne Université, Sapienza Università di Roma)
+- **Roberto Netti** (Sorbonne Université)
+- **Anna Paola Muntoni** (Politecnico di Torino)
+- **Martin Weigt** (Sorbonne Université)
+- **Francesco Zamponi** (Sapienza Università di Roma)
+  
+**Maintainer:** Anna Paola Muntoni
+
+## Overview
+
+**adabmDCA 2.0** is a flexible yet easy-to-use implementation of Direct Coupling Analysis (DCA) based on Boltzmann machine learning. This package provides tools for analyzing residue-residue contacts, predicting mutational effects, scoring sequence libraries, and generating artificial sequences, applicable to both protein and RNA families. The package is designed for flexibility and performance, supporting multiple programming languages (C++, Julia, Python) and architectures (single-core/multi-core CPUs and GPUs).  
+This repository contains the C/C++ version of adabmDCA, maintained by **Anna Paola Muntoni**.
+
+## Features
+
+- **Direct Coupling Analysis (DCA)** based on Boltzmann machine learning.
+- Support for **dense** and **sparse** generative DCA models.
+- Available on multiple architectures: single-core and multi-core CPUs, GPUs.
+- Ready-to-use for **residue-residue contact prediction**, **mutational-effect prediction**, and **sequence design**.
+- Compatible with protein and RNA family analysis.
 
 ## Installation
 In the __src__ folder run
