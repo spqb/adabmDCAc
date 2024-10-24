@@ -34,7 +34,7 @@ It will generate the executable file __adabmDCA__. In the main folder run also `
 for the basic runs or look at the [main page](https://github.com/spqb/adabmDCA).
 
 
-## Working directly in C/C++
+## Alternative usage
 
 
 ### Learning a Potts model from a MSA
