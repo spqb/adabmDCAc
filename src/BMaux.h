@@ -95,7 +95,7 @@ int quicksort_c(vector<T> &x, vector<int> &tmp_idx, int first, int last)
 }
 
 template <class T>
-int print_frobenius_norms(vector<T> &h, vector<vector<T>> &J, int L, int q, char *normfile, char *parfile)
+int print_frobenius_norms(vector<T> &h, vector<vector<T> > &J, int L, int q, char *normfile, char *parfile)
 {
 
 	ofstream fp;
@@ -104,7 +104,7 @@ int print_frobenius_norms(vector<T> &h, vector<vector<T>> &J, int L, int q, char
 	//fpp.open(parfile);
 
 	vector<T> hzs = h;
-	vector<vector<T>> Jzs = J;
+	vector<vector<T> > Jzs = J;
 
 	for (int i = 0; i < L; i++)
 	{

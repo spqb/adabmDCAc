@@ -40,13 +40,13 @@ class Data
 public:
   int q, L, M;
   double Meff;
-  vector<vector<unsigned char>> msa;
+  vector<vector<unsigned char> > msa;
   vector<MYFLOAT> w;
   vector<MYFLOAT> fm;
-  vector<vector<MYFLOAT>> sm;
-  vector<vector<MYFLOAT>> cov;
+  vector<vector<MYFLOAT> > sm;
+  vector<vector<MYFLOAT> > cov;
   vector<MYFLOAT> tm; // Pay attention. File contains connected 3rd order correlations
-  vector<vector<int>> tm_index;
+  vector<vector<int> > tm_index;
   Params *params;
 
   Data(Params *_params);
@@ -64,7 +64,7 @@ public:
   /******************** METHODS FOR OUTPUT ***********************************************************/
 
   void print_msa(char *filename);
-  int print_statistics(char *file_sm, char *file_fm, char *file_tm, char *file_c, vector<MYFLOAT> &fm_s, vector<vector<MYFLOAT>> &sm_s, vector<MYFLOAT> &tm_s);
+  int print_statistics(char *file_sm, char *file_fm, char *file_tm, char *file_c, vector<MYFLOAT> &fm_s, vector<vector<MYFLOAT> > &sm_s, vector<MYFLOAT> &tm_s);
 };
 
 /* CONTAINER FOR THE ENERGY MSA AND ITS FITNESS */
@@ -74,13 +74,13 @@ public:
   Params *params;
   int q, L, M;
   double A;
-  vector<vector<unsigned char>> msa;
+  vector<vector<unsigned char> > msa;
   vector<double> w;
   vector<MYFLOAT> fitness;
   vector<MYFLOAT> energy;
   vector<MYFLOAT> tg_energy;
   vector<MYFLOAT> gradh;
-  vector<vector<MYFLOAT>> gradJ;
+  vector<vector<MYFLOAT> > gradJ;
 
   Data_e(Params *_params, int _q, int _L, double Meff);
   void read_msa();
