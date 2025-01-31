@@ -44,8 +44,7 @@ int sample_seq(vector<double> &cum_sum);
 template <class T>
 int quicksort(vector<T> &x, vector<int> &tmp_idx, int first, int last)
 {
-	sort(tmp_idx.begin() + first, tmp_idx.begin() + last + 1, [&](int i, int j)
-		 { return x[i] < x[j]; });
+	sort(tmp_idx.begin() + first, tmp_idx.begin() + last + 1, [&](int i, int j){ return x[i] < x[j]; });
 	vector<T> y((int)(tmp_idx.size()));
 	for (int k = 0; k < int(y.size()); k++)
 	{
