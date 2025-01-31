@@ -24,7 +24,6 @@ LONG=data:,output:,model:,weights:,path_params:,path_chains:,label:,alphabet:,lr
 
 # Parse command line arguments
 OPTS=$(getopt --options $SHORT --longoptions $LONG -- "$@")
-
 # Default values
 outfolder="DCA_model"
 model="bmDCA"
@@ -81,7 +80,15 @@ if [ "$OPTS" ]; then
       --beta ) beta="$2"; shift 2;;
       --ngen ) ngen="-s $2"; shift 2;;
       --nmix ) nmix="$2"; shift 2;;
-      -h | --help ) help=true ;;
+      -h | --help ) help=true; 
+        echo "Usage:"
+        echo "./adabmDCA.sh train -m [ model ] [ -d | --data ] [ -o | --output ] [ -h | --help ]"
+        echo "./adabmDCA.sh sample [ -p | --path_params ] [ -d | --data ] [ -o | --output ] [ --ngen ] [ -h | --help ]";
+        echo "./adabmDCA.sh energies [ -p | --path_params ] [ -d | --data ] [ -o | --output ] [ -h | --help ]";
+        echo "./adabmDCA.sh DMS [ -p | --path_params ] [ -d | --data ] [ -o | --output ] [ -h | --help ]";
+        echo "./adabmDCA.sh contacts [ -p | --path_params ] [ -o | --output ] [ -h | --help ]";
+        echo "See https://github.com/spqb/adabmDCA or type ./adabmDCA -h for this C/C++ implementation";
+        exit 0;;
       -- ) shift; break ;;
       * ) echo "Unexpected option: $1"; exit 1 ;;
     esac
@@ -101,18 +108,6 @@ case "$abc" in
   dna ) alpha="-b -ACGT";;
   * ) alpha="-b $abc";;
 esac
-
-# Perform actions based on parsed options
-if [ "$help" ]; then
-  echo "Usage:"
-  echo "./adabmDCA.sh train -m [ model ] [ -d | --data ] [ -o | --output ] [ -h | --help ]"
-  echo "./adabmDCA.sh sample [ -p | --path_params ] [ -d | --data ] [ -o | --output ] [ --ngen ] [ -h | --help ]"
-  echo "./adabmDCA.sh energies [ -p | --path_params ] [ -d | --data ] [ -o | --output ] [ -h | --help ]"
-  echo "./adabmDCA.sh DMS [ -p | --path_params ] [ -d | --data ] [ -o | --output ] [ -h | --help ]"
-  echo "./adabmDCA.sh contacts [ -p | --path_params ] [ -o | --output ] [ -h | --help ]"
-  echo "See https://github.com/spqb/adabmDCA or type ./adabmDCA -h for this C/C++ implementation"
-  exit 0
-fi
 
 # Run different command lines according to model 
 train=false
