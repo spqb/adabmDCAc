@@ -31,7 +31,7 @@ make
 ```
 It will generate the executable file __adabmDCA__. In the main folder run also `chmod +x adabmDCA.sh` to use the main script file. See 
 ```
-./adabmDCA.sh --help
+./adabmDCA.sh [ train | sample | energies | DMS | contacts ] --help
 ```
 for the basic runs or look at the [main page](https://github.com/spqb/adabmDCA).
 
